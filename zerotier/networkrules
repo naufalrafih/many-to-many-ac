@@ -1,0 +1,21 @@
+# Allow only IPv4, IPv4 ARP, and IPv6 Ethernet frames.
+drop
+	not ethertype ipv4
+	and not ethertype arp
+	#and not ethertype ipv6
+;
+
+#
+drop
+	not chr ipauth
+;
+
+#
+drop
+	ipsrc 10.0.1.0/24
+  	and ipdest 10.0.1.0/24
+;
+
+
+# Accept anything else. This is required since default is 'drop'.
+accept;
