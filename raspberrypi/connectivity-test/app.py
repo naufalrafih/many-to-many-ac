@@ -15,3 +15,4 @@ def request():
     r = requests.get(f'http://{ADVERSARY_HOST}:{ADVERSARY_PORT}/')
     print("Status code:",r.status_code)
     print("Body:",r.content)
+    return("Request Successful!")
