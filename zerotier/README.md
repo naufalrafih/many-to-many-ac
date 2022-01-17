@@ -13,3 +13,7 @@ IP addresses:
 | raspberry3 (4 Model B) | 10.0.0.3 |
 | Laptop ASUS Fajri | 10.0.0.4 |
 | Laptop HP Naufal | 10.0.0.5 |
+
+Script untuk join ZeroTier network di Raspberry Pi:
+
+    sudo zerotier-cli join $NETWORK_ID
