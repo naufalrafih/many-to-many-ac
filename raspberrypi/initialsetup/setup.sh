@@ -4,4 +4,5 @@ $SCRIPT_ROOT_DIR/pipenvinstall.sh
 $SCRIPT_ROOT_DIR/zerotierinstall.sh
 $SCRIPT_ROOT_DIR/gitinstall.sh
 $SCRIPT_ROOT_DIR/sshsetup.sh
+$SCRIPT_ROOT_DIR/sqlitesetup.sh
 git clone $REPO
