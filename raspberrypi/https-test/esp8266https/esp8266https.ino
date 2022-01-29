@@ -5,6 +5,7 @@
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
 #include "certificate.h"
+#include "functions.h"
 
 const char* ssid     = "mywifi";
 const char* password = "543216789";
@@ -41,26 +42,8 @@ void loop() {
   Serial.println("Establishing certificate...");
   wifiClient.setTrustAnchors(&certificate);
 
-  // Set time via NTP, as required for x.509 validation
-  configTime(3 * 3600, 0, "time.nist.gov", "pool.ntp.org");
-  Serial.print("Waiting for NTP time sync: ");
-  time_t now = time(nullptr);
-
-  while (now < 8 * 3600 * 2) { 
-    delay(500);
-    Serial.print(".");
-    now = time(nullptr);
-  }
-
-  Serial.println("");
-
-  struct tm timeinfo;
-
-  gmtime_r(&now, &timeinfo);
-
-  Serial.print("Current time: ");
-  Serial.print(asctime(&timeinfo));
-
+  setNTP();
+  
   Serial.println("Connecting");
   wifiClient.connect(hostserver, hostport);
   if (!wifiClient.connected()) {
@@ -70,12 +53,8 @@ void loop() {
   }
 
   Serial.println("Connected!");
-  wifiClient.write("GET ");
-  wifiClient.write("/");
-  wifiClient.write(" HTTP/1.0\r\nHost: ");
-  wifiClient.write("192.168.43.128");
-  wifiClient.write("\r\nUser-Agent: ESP8266\r\n");
-  wifiClient.write("\r\n");
+
+  getRequest(&wifiClient, "/");
   
   delay(5000);
 }
