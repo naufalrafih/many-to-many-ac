@@ -1,3 +1,14 @@
+CREATE TABLE certcenter (
+certcenter_ip_address TEXT PRIMARY KEY
+);
+
+CREATE TABLE institute (
+institute_name TEXT PRIMARY KEY,
+public_key TEXT NOT NULL,
+private_key TEXT NOT NULL,
+key_a TEXT NOT NULL
+);
+
 CREATE TABLE assets (
 asset_id INTEGER PRIMARY KEY AUTOINCREMENT,
 asset_name TEXT NOT NULL,
