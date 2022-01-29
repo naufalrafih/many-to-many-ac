@@ -12,7 +12,10 @@ def hello_world():
 
 @app.route("/request")
 def request():
-    r = requests.get(f'http://{ADVERSARY_HOST}:{ADVERSARY_PORT}/')
+    r = requests.get(f'https://{ADVERSARY_HOST}:{ADVERSARY_PORT}/')
     print("Status code:",r.status_code)
     print("Body:",r.content)
     return("Request Successful!")
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0',ssl_context=('cert.pem','key.pem'),debug=True)

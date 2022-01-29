@@ -4,10 +4,12 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
+#include "certificate.h"
 
 const char* ssid     = "mywifi";
 const char* password = "543216789";
-String hostserver = "192.168.137.1";
+//const char* hostserver = "192.168.137.145";
+IPAddress hostserver(192, 168, 137, 145);
 uint16_t hostport = 5000;
 
 void setup() {
@@ -34,37 +36,46 @@ void setup() {
 }
 
 void loop() {
-  // wait for WiFi connection
-  if ((WiFi.status() == WL_CONNECTED)) {
+  BearSSL::WiFiClientSecure wifiClient;
 
-    WiFiClient client;
+  Serial.println("Establishing certificate...");
+  wifiClient.setTrustAnchors(&certificate);
 
-    HTTPClient http;
-    String url = "http://" + hostserver + ":" + String(hostport) + "/";
-    Serial.print("Inititating HTTP client to " + url + "\n");
-    if (http.begin(client, url)) {  // HTTP
+  // Set time via NTP, as required for x.509 validation
+  configTime(3 * 3600, 0, "time.nist.gov", "pool.ntp.org");
+  Serial.print("Waiting for NTP time sync: ");
+  time_t now = time(nullptr);
 
-
-      Serial.print("Sending HTTP GET.\n");
-      int httpCode = http.GET();
-
-      if (httpCode > 0) { //Success
-        Serial.printf("Success. Got HTTP code: %d\n", httpCode);
-
-        // file found at server
-        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-          String payload = http.getString();
-          Serial.println(payload);
-        }
-      } else {
-        Serial.printf("Unsuccessful. Error: %s\n", http.errorToString(httpCode).c_str());
-      }
-
-      http.end();
-    } else {
-      Serial.printf("Unable to connect.\n");
-    }
+  while (now < 8 * 3600 * 2) { 
+    delay(500);
+    Serial.print(".");
+    now = time(nullptr);
   }
 
+  Serial.println("");
+
+  struct tm timeinfo;
+
+  gmtime_r(&now, &timeinfo);
+
+  Serial.print("Current time: ");
+  Serial.print(asctime(&timeinfo));
+
+  Serial.println("Connecting");
+  wifiClient.connect(hostserver, hostport);
+  if (!wifiClient.connected()) {
+    Serial.println("Can't connect!!!");
+    delay(1000);
+    return;
+  }
+
+  Serial.println("Connected!");
+  wifiClient.write("GET ");
+  wifiClient.write("/");
+  wifiClient.write(" HTTP/1.0\r\nHost: ");
+  wifiClient.write("192.168.43.128");
+  wifiClient.write("\r\nUser-Agent: ESP8266\r\n");
+  wifiClient.write("\r\n");
+  
   delay(5000);
 }
