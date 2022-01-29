@@ -50,11 +50,28 @@ void loop() {
     Serial.println("Can't connect!!!");
     delay(1000);
     return;
+  } else {
+    Serial.println("Connected!");  
+
+    if (Serial.available() > 0) { //Input at serial to send a request
+      int c = Serial.read();
+      getRequest(&wifiClient, "/");
+
+      long int time_start = millis(); //When request is sent, initiate 10s timeout
+      while (millis() - time_start < 10000) {
+        if (wifiClient.available()) { //If response is available before timeout, proceed
+          break;
+        }
+      }
+    }
+
+    while (wifiClient.available()) { //Proceed when response is available
+      String line = wifiClient.readStringUntil('\n');
+      Serial.println(line);
+    }
   }
 
-  Serial.println("Connected!");
 
-  getRequest(&wifiClient, "/");
-  
-  delay(5000);
+
+
 }
