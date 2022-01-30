@@ -1,23 +1,34 @@
-from flask import Flask
+from flask import Flask, render_template
+import sqlite3
 import requests
 import sqlite3
 import os
 
 app = Flask(__name__)
 
-ADVERSARY_HOST="raspberrypi3"
-ADVERSARY_PORT="5000"
+@app.route("/home")
+def home_page():
+    try:
+        con = sqlite3.connect("cert-center.db")
+        cur = con.cursor()
+        if (cur.execute('SELECT * FROM certcenter')):
+            initialized=True
+        else:
+            initialized=False
+        response_text = render_template('home.html', initialized=initialized)
+        response_code = 200
+        return response_text, response_code
+    except Exception as e:
+        return f"Error! Exception: {e}", 500
 
-@app.route("/")
-def hello_world():
-    return("Connection Successful!")
-
-@app.route("/request")
-def request():
-    r = requests.get(f'https://{ADVERSARY_HOST}:{ADVERSARY_PORT}/')
-    print("Status code:",r.status_code)
-    print("Body:",r.content)
-    return("Request Successful!")
+@app.route("/api/initialize")
+def initialize_cert_center():
+    try:
+        response_text = "OK"
+        response_code = 200
+        return response_text, response_code
+    except Exception as e:
+        return f"Error! Exception: {e}", 500
 
 @app.route("/api/initialize")
 def initialize():
