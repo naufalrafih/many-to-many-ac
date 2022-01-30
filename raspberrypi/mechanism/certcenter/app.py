@@ -8,9 +8,9 @@ app = Flask(__name__)
 @app.route("/home")
 def home_page():
     try:
-        con = sqlite3.connect("cert-center.db")
+        con = sqlite3.connect("db/cert-center.db")
         cur = con.cursor()
-        if (cur.execute('SELECT * FROM certcenter')):
+        if (cur.execute('SELECT * FROM certcenter').fetchall()):
             initialized=True
         else:
             initialized=False
@@ -23,7 +23,7 @@ def home_page():
 @app.route("/api/initialize")
 def initialize_cert_center():
     try:
-        con = sqlite3.connect('cert-center.db')
+        con = sqlite3.connect('db/cert-center.db')
         cur = con.cursor()
         cur.execute('SELECT * FROM certcenter')
         row = cur.fetchall()
@@ -48,4 +48,4 @@ def initialize_cert_center():
         return f"Error! Exception: {e}", 500
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',ssl_context=('cert.pem','key.pem'),debug=True)
+    app.run(host='0.0.0.0',ssl_context=('secrets/cert.pem','secrets/key.pem'),debug=True)

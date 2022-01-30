@@ -1,4 +1,7 @@
 */Pipfile
 */Pipfile.lock
-*/cert-center.db
-*/cert-center.sql
+*/db/cert-center.db
+*/db/cert-center.sql
+*/db/institute.db
+*/db/institute.sql
+*/secrets/*.pem

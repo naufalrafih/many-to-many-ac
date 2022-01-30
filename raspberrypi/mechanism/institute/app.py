@@ -17,4 +17,4 @@ def hello_world():
     
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',ssl_context=('cert.pem','key.pem'),debug=True)
+    app.run(host='0.0.0.0',ssl_context=('secrets/cert.pem','secrets/key.pem'),debug=True)
