@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cert Center Homepage</title>
+</head>
+<body>
+    <h1>Cert Center Homepage</h1>
+    {% if initialized %}
+        <div id="initialize-block">
+            <p>Already initialized</p>
+        </div>
+    {% else %}
+        <div id="initialize-block">
+            <p>Not initialized</p>
+            <button onclick="initialize()">
+                Initialize!
+            </button>
+        </div>
+    {% endif %}
+
+    <div id="links">
+        <h2>
+            Links
+        </h2>
+        <a href="/home/register/institute">
+            <button>
+                Register Institute
+            </button>
+        </a>
+
+        <a href="/home/register/user">
+            <button>
+                Register User
+            </button>
+        </a>
+    </div>
+</body>
+
+<script>
+    {% if initialized %}
+        //Nothing
+    {% else %}
+        function initialize() {
+            var url = window.location.protocol + "//" + window.location.host + "/api/initialize";
+            alert("Initializing cert center!! Sending initialization request to " + url);
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", url, true);
+            xmlHttp.onreadystatechange = function () {
+                if (xmlHttp.readyState == 4) {
+                    if (xmlHttp.status == 200) {
+                        console.log(xmlHttp.responseText);
+                        const element = document.getElementById("initialize-block");
+                        element.innerHTML = "Okay. Initialized.";
+                    } else {
+                        alert("Failed to initialize")   
+                    }
+                }
+            }
+            xmlHttp.send();
+        }
+    {% endif %}  
+</script>
+
+</html>
