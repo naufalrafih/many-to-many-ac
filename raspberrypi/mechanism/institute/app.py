@@ -1,21 +1,16 @@
 from flask import Flask
 import requests
+import os
 
 app = Flask(__name__)
 
-ADVERSARY_HOST="raspberrypi3"
-ADVERSARY_PORT="5000"
+server_directory = os.path.dirname(os.path.realpath(__file__))
 
-@app.route("/")
+@app.route("/home")
 def hello_world():
-    return("Connection Successful!")
-
-@app.route("/request")
-def request():
-    r = requests.get(f'https://{ADVERSARY_HOST}:{ADVERSARY_PORT}/')
-    print("Status code:",r.status_code)
-    print("Body:",r.content)
-    return("Request Successful!")
+    with open(f"{server_directory}/static/home.html","r") as html_file:
+        html = html_file.read()
+    return(html)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',ssl_context=('cert.pem','key.pem'),debug=True)
