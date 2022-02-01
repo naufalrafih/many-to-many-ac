@@ -1,6 +1,7 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 import requests
 import os
+import sqlite3
 
 app = Flask(__name__)
 
@@ -15,6 +16,49 @@ def hello_world():
     except Exception as e:
         return f"Error! Exception: {e}", 500
     
+@app.route("/api/initialize/certcenter")
+def initialize_certcenter():
+    try:
+        #Create cert center data
+        data = request.get_json()
+        certcenter_name = "certcenter"
+        certcenter_ip_address = data["certcenter_ip_address"]
+        print(f"Cert Center - Name: {certcenter_name}, IP: {certcenter_ip_address}")
+        
+        #Insert into DB
+        con = sqlite3.connect("db/institute.db")
+        cur = con.cursor()
+        cur.execute("DELETE FROM certcenter")
+        cur.execute("INSERT INTO certcenter (certcenter_name, certcenter_ip_address) VALUES (?, ?)",
+                        (certcenter_name, certcenter_ip_address))
+
+        response_text = "OK!"
+        response_code = 200
+        return response_text, response_code
+    except Exception as e:
+        return f"Error! Exception : {e}", 500
+
+@app.route("/api/initialize/institute")
+def initialize_institute():
+    try:
+        #Create cert center data
+        data = request.get_json()
+
+        #Insert into DB
+        con = sqlite3.connect("db/institute.db")
+        cur = con.cursor()
+        cur.execute("DELETE FROM institute")
+
+        for index, asset in enumerate(data):
+            print(f"Asset no. {index+1} - Name: {asset['asset_name']}, IP: {asset['asset_ip_address']}. Inserting into DB.")
+            cur.execute("INSERT INTO institute (certcenter_name, certcenter_ip_address) VALUES (?, ?)",
+                        (asset['asset_name'], asset['asset_ip_address']))
+
+        response_text = "OK!"
+        response_code = 200
+        return response_text, response_code
+    except Exception as e:
+        return f"Error! Exception : {e}", 500
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',ssl_context=('secrets/cert.pem','secrets/key.pem'),debug=True)
