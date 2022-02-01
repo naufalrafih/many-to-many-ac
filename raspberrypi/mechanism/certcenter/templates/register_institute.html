@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Institute</title>
+</head>
+<body>
+    <h1>Register an Institute</h1>
+    <form id="register-form" name="register-form">
+        <dl>
+            <dt>Institute name:</dt>
+            <dd><input type="text" name="institute_name" value="" required></dd>
+            <dt>Institute IP address:</dt>
+            <dd><input type="text" name="institute_ip_address" value="" required></dd>
+        </dl>
+    </form>
+    <button onclick="register()">Register</button>
+
+    <script>
+        function register() {
+            var form_element = document.getElementById("register-form")
+            var form = new FormData(form_element)
+
+            var formObject = {}
+            form.forEach( function (value, key) {
+                formObject[key] = value
+            })
+            var formJson = JSON.stringify(formObject)
+            
+            var url = window.location.protocol + "//" + window.location.host + "/api/register/institute"
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("POST", url, true);
+            xmlHttp.onreadystatechange = function () {
+                if (xmlHttp.readyState == 4) {
+                    if (xmlHttp.status == 200) {
+                        console.log(xmlHttp.responseText);
+                        alert("Successfully registered institute.")
+                    } else {
+                        alert("Unable to register institute!!")   
+                    }
+                }
+            }
+            xmlHttp.send(formJson);
+
+        }
+    </script>
+</body>
+</html>
