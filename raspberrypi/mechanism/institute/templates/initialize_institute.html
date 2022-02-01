@@ -15,21 +15,28 @@
             Already initialized!
         {% else %}
             <div id="initializer">
-
+                <form id="assets-num" name="assets-num">
+                    <dl>
+                        <dt>Number of assets in the institute:</dt>
+                        <dd><input type="text" name="num-of-assets" value="" required></dd>
+                    </dl>
+                </form>
+                <button onclick="bootstrap_form()">Proceed</button>
             </div>
-            <form id="initialize-form" name="initialize-form">
+
+            <!-- <form id="initialize-form" name="initialize-form">
                 <dl>
-                    <dt>Certification Center Name:
-                    <dd><input type=text name="certcenter_name" value="" required/>
-                    <dt>Certification Center IP Address:
-                    <dd><input type=text name="certcenter_ip_address" value="" required/>
-                    <dt>Asset Name:
-                    <dd><input type=text name="asset_name" value="" required/>
-                    <dt>Asset IP Address:
-                    <dd><input type=text name="asset_ip_address" value="" required/>
+                    <dt>Certification Center Name:</dt>
+                    <dd><input type=text name="certcenter_name" value="" required/></dd>
+                    <dt>Certification Center IP Address:</dt>
+                    <dd><input type=text name="certcenter_ip_address" value="" required/></dd>
+                    <dt>Asset Name:</dt>
+                    <dd><input type=text name="asset_name" value="" required/></dd>
+                    <dt>Asset IP Address:</dt>
+                    <dd><input type=text name="asset_ip_address" value="" required/></dd>
                 </dl>
             </form>
-            <button onclick="initialize()">Initialize!</button>
+            <button onclick="initialize()">Initialize!</button> -->
         {% endif %}
 
 
@@ -39,17 +46,82 @@
             // Nothing
         {% else %}
 
-            
+            function create_form_input(name, description) {
+                let dt = document.createElement("dt")
+                dt.innerHTML = description
+                let dd = document.createElement("dd")
+                let inp = document.createElement("input")
+                inp.setAttribute("type","text")
+                inp.setAttribute("name",name)
+                inp.setAttribute("value","")
+                inp.required = true
+                dd.appendChild(inp)
+                return [dt, dd]
+            }
 
+            function bootstrap_form() {
+                var asset_num_formdata = new FormData(document.getElementById('assets-num'))
+                var num_of_assets = parseInt(asset_num_formdata.get('num-of-assets'))
+
+                var initializer_div = document.getElementById("initializer")
+                initializer_div.innerHTML = ""
+
+                let initializer_form = document.createElement("form")
+                initializer_form.setAttribute("id", "initialize-form")
+                initializer_form.setAttribute("name", "initialize-form")
+
+                let dt_cert, dd_cert;
+                [dt_cert, dd_cert] = create_form_input("certcenter_ip_address","Certification Center IP address:")
+                initializer_form.appendChild(dt_cert)
+                initializer_form.appendChild(dd_cert)
+                
+                for (let i = 1; i < num_of_assets + 1; i++) {
+                    let dt_name, dd_name;
+                    [dt_name, dd_name] = create_form_input("asset_name_" + i, "Insert asset " + i + " name:")
+                    let dt_ip, dd_ip;
+                    [dt_ip, dd_ip] = create_form_input("asset_ip_address_" + i, "Insert asset " + i + " IP address:")
+                    initializer_form.appendChild(dt_name)
+                    initializer_form.appendChild(dd_name)
+                    initializer_form.appendChild(dt_ip)
+                    initializer_form.appendChild(dd_ip)
+                }
+
+                button = document.createElement("button")
+                button.setAttribute("onclick","initialize()")
+                button.innerHTML = "Initialize!"
+                
+                initializer_div.appendChild(initializer_form)
+                initializer_div.appendChild(button)
+
+            }
+
+            
             function initialize() {
                 var form_element = document.getElementById('initialize-form')
                 var form = new FormData(form_element)
-                var formObject = {}
+                var temp_formObject = {}
                 form.forEach( function (value,key) {
-                    formObject[key] = value
+                    temp_formObject[key] = value
                 })
 
+                var formObject = {}
+
+                //Parse Cert Center data to JSON
+                formObject["certcenter_data"] = {}
+                formObject["certcenter_data"]["certcenter_name"] = "Cert Center"
+                formObject["certcenter_data"]["certcenter_ip_address"] = temp_formObject["certcenter_ip_address"]
+
+                //Parse assets data to JSON
+                formObject["assets_data"] = [];
+                var num_of_assets = (Object.keys(temp_formObject).length - 1)/2;
+                for (let i = 0; i < num_of_assets; i++) {
+                    formObject["assets_data"][i] = {}
+                    formObject["assets_data"][i]["asset_name"] = temp_formObject["asset_name_"+(i+1)]
+                    formObject["assets_data"][i]["asset_ip_address"] = temp_formObject["asset_ip_address_"+(i+1)]
+                }
+
                 var formJson = JSON.stringify(formObject)
+                console.log(formJson)
                 var url = window.location.protocol + "//" + window.location.host + "/api/initialize";
                 alert("Initializing institute! Sending initialization request to " + url)
                 var xmlHttp = new XMLHttpRequest();
@@ -67,9 +139,7 @@
                     }
                 }
                 xmlHttp.send(formJson);
-            }   
+            }
         {% endif %}
     </script>
     </body>
-
-</html>
