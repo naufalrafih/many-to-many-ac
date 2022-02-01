@@ -1,11 +1,15 @@
 from flask import Flask, render_template, request
 import requests
 import sqlite3
+from requests.packages.urllib3.exceptions import SubjectAltNameWarning
+import os
 from Crypto.PublicKey import RSA
 
 app = Flask(__name__)
 
-PORT="35753"
+CERTCENTER_PORT=35753
+INSTITUTE_PORT=35754
+server_directory = os.path.dirname(os.path.abspath(__file__))
 
 @app.route("/home", methods=["GET"])
 def hello_world():
@@ -42,8 +46,8 @@ def api_initialize_institute():
         assets_data = data["assets_data"]
 
         requests.packages.urllib3.disable_warnings()
-        r_certcenter = requests.post(request.url_root + "api/initialize/certcenter", verify=False, json=certcenter_data)
-        r_institute = requests.post(request.url_root + "api/initialize/assets", verify=False, json=assets_data)
+        r_certcenter = requests.post(request.url_root + "api/initialize/certcenter", verify=f"{server_directory}/secrets/cert.pem", json=certcenter_data)
+        r_institute = requests.post(request.url_root + "api/initialize/assets", verify=f"{server_directory}/secrets/cert.pem", json=assets_data)
         if (r_certcenter.ok and r_institute.ok):
             response_text = "OK!"
             response_code = 200
@@ -133,4 +137,5 @@ def register_institute():
         return f"Unsuccessful", 500
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=PORT, ssl_context=('secrets/cert.pem','secrets/key.pem'), debug=True)
+    requests.packages.urllib3.disable_warnings(SubjectAltNameWarning)
+    app.run(host='0.0.0.0', port=INSTITUTE_PORT, ssl_context=('secrets/cert.pem','secrets/key.pem'), debug=True)

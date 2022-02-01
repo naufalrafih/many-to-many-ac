@@ -1,12 +1,15 @@
 from flask import Flask, render_template, request
 import sqlite3
+from requests.packages.urllib3.exceptions import SubjectAltNameWarning
 import requests
 import os
 import json
 
 app = Flask(__name__)
 
-PORT="35753"
+CERTCENTER_PORT=35753
+INSTITUTE_PORT=35754
+server_directory = os.path.dirname(os.path.abspath(__file__))
 
 @app.route("/home", methods=["GET"])
 def home_page():
@@ -83,7 +86,7 @@ def register_institute():
         data_json.update(institute_id_json)
 
         requests.packages.urllib3.disable_warnings()
-        r = requests.post(f'https://{institute_ip_address}:{PORT}/' + "api/register", verify=False, json=data_json)
+        r = requests.post(f'https://{institute_ip_address}:{INSTITUTE_PORT}/' + "api/register", verify=f"{server_directory}/certs/{institute_name}.pem", json=data_json)
         if (r.ok):
             response_text = "OK!"
             response_code = 200
@@ -93,4 +96,5 @@ def register_institute():
         return f"Unsuccessful", 500
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=PORT, ssl_context=('secrets/cert.pem','secrets/key.pem'), debug=True)
+    requests.packages.urllib3.disable_warnings(SubjectAltNameWarning)
+    app.run(host='0.0.0.0', port=CERTCENTER_PORT, ssl_context=('secrets/cert.pem','secrets/key.pem'), debug=True)

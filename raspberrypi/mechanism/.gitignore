@@ -5,3 +5,4 @@
 */db/institute-server.db
 */db/institute-server.sql
 */secrets/*.pem
+*/certs/*.pem
