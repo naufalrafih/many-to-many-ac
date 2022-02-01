@@ -1,11 +1,8 @@
 from flask import Flask, render_template, request
 import requests
-import os
 import sqlite3
 
 app = Flask(__name__)
-
-server_directory = os.path.dirname(os.path.realpath(__file__))
 
 @app.route("/home")
 def hello_world():
@@ -16,7 +13,7 @@ def hello_world():
     except Exception as e:
         return f"Error! Exception: {e}", 500
     
-@app.route("/home/initialize", methods=("GET", "POST"))
+@app.route("/home/initialize")
 def initialize_institute():
     try:
         con = sqlite3.connect("db/institute-server.db")
@@ -26,7 +23,7 @@ def initialize_institute():
         else:
             initialized = False
 
-        response_text = render_template("initialize_institute.html")
+        response_text = render_template("initialize_institute.html", initialized=initialized)
         response_code = 200
         return response_text, response_code
     except Exception as e:
@@ -36,41 +33,39 @@ def initialize_institute():
 def api_initialize_institute():
     try:
         if request.method == "POST":
-            print(request.data)
-            print(request.headers)
             data = request.get_json()
-            certcenter_name = data["certcenter_name"]
-            certcenter_ip_address = data["certcenter_ip_address"]
-            asset_name = data["asset_name"]
-            asset_ip_address =  data["asset_ip_address"]
-            print(certcenter_name)
-            print(certcenter_ip_address)
-            print(asset_name)
-            print(asset_ip_address)
-            response_text = "OK!"
-            response_code = 200
-            return response_text, response_code
+            certcenter_data = data["certcenter_data"]
+            assets_data = data["assets_data"]
+
+            requests.packages.urllib3.disable_warnings()
+            r_certcenter = requests.post(request.url_root + "api/initialize/certcenter", verify=False, json=certcenter_data)
+            r_institute = requests.post(request.url_root + "api/initialize/assets", verify=False, json=assets_data)
+            if (r_certcenter.ok and r_institute.ok):
+                response_text = "OK!"
+                response_code = 200
+                return response_text, response_code
         elif request.method == "GET":
             return "GET"
     except Exception as e:
-        print(e)
         return f"Error! Exception: {e}", 500
 
-@app.route("/api/initialize/certcenter")
+@app.route("/api/initialize/certcenter", methods=("GET", "POST"))
 def initialize_certcenter():
     try:
-        #Create cert center data
+        # Create cert center data
         data = request.get_json()
-        certcenter_name = "certcenter"
+        certcenter_name = data["certcenter_name"]
         certcenter_ip_address = data["certcenter_ip_address"]
         print(f"Cert Center - Name: {certcenter_name}, IP: {certcenter_ip_address}")
-        
-        #Insert into DB
-        con = sqlite3.connect("db/institute.db")
+
+        # Insert into DB
+        con = sqlite3.connect("db/institute-server.db")
         cur = con.cursor()
         cur.execute("DELETE FROM certcenter")
         cur.execute("INSERT INTO certcenter (certcenter_name, certcenter_ip_address) VALUES (?, ?)",
                         (certcenter_name, certcenter_ip_address))
+        con.commit()
+        con.close()
 
         response_text = "OK!"
         response_code = 200
@@ -78,21 +73,22 @@ def initialize_certcenter():
     except Exception as e:
         return f"Error! Exception : {e}", 500
 
-@app.route("/api/initialize/institute")
+@app.route("/api/initialize/assets", methods=("GET", "POST"))
 def initialize_asset():
     try:
-        #Create cert center data
+        # Create cert center data
         data = request.get_json()
 
-        #Insert into DB
-        con = sqlite3.connect("db/institute.db")
+        # Insert into DB
+        con = sqlite3.connect("db/institute-server.db")
         cur = con.cursor()
-        cur.execute("DELETE FROM institute")
-
+        cur.execute("DELETE FROM assets")
         for index, asset in enumerate(data):
             print(f"Asset no. {index+1} - Name: {asset['asset_name']}, IP: {asset['asset_ip_address']}. Inserting into DB.")
-            cur.execute("INSERT INTO institute (certcenter_name, certcenter_ip_address) VALUES (?, ?)",
+            cur.execute("INSERT INTO assets (asset_name, asset_ip_address) VALUES (?, ?)",
                         (asset['asset_name'], asset['asset_ip_address']))
+        con.commit()
+        con.close()
 
         response_text = "OK!"
         response_code = 200

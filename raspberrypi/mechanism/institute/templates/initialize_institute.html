@@ -46,6 +46,8 @@
             // Nothing
         {% else %}
 
+            var initializer_div = document.getElementById("initializer")
+
             function create_form_input(name, description) {
                 let dt = document.createElement("dt")
                 dt.innerHTML = description
@@ -63,7 +65,6 @@
                 var asset_num_formdata = new FormData(document.getElementById('assets-num'))
                 var num_of_assets = parseInt(asset_num_formdata.get('num-of-assets'))
 
-                var initializer_div = document.getElementById("initializer")
                 initializer_div.innerHTML = ""
 
                 let initializer_form = document.createElement("form")
@@ -131,8 +132,7 @@
                     if (xmlHttp.readyState == 4) {
                         if (xmlHttp.status == 200) {
                             console.log(xmlHttp.responseText);
-                            const element = document.getElementById("initialize-block");
-                            element.innerHTML = "Okay. Initialized.";
+                            initializer_div.innerHTML = "<h2>Initialized!</h2>"
                         } else {
                             alert("Failed to initialize")   
                         }
