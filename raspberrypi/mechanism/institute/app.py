@@ -34,20 +34,17 @@ def initialize_institute():
 @app.route("/api/initialize", methods=["POST"])
 def api_initialize_institute():
     try:
-        if request.method == "POST":
-            data = request.get_json()
-            certcenter_data = data["certcenter_data"]
-            assets_data = data["assets_data"]
+        data = request.get_json()
+        certcenter_data = data["certcenter_data"]
+        assets_data = data["assets_data"]
 
-            requests.packages.urllib3.disable_warnings()
-            r_certcenter = requests.post(request.url_root + "api/initialize/certcenter", verify=False, json=certcenter_data)
-            r_institute = requests.post(request.url_root + "api/initialize/assets", verify=False, json=assets_data)
-            if (r_certcenter.ok and r_institute.ok):
-                response_text = "OK!"
-                response_code = 200
-                return response_text, response_code
-        elif request.method == "GET":
-            return "GET"
+        requests.packages.urllib3.disable_warnings()
+        r_certcenter = requests.post(request.url_root + "api/initialize/certcenter", verify=False, json=certcenter_data)
+        r_institute = requests.post(request.url_root + "api/initialize/assets", verify=False, json=assets_data)
+        if (r_certcenter.ok and r_institute.ok):
+            response_text = "OK!"
+            response_code = 200
+            return response_text, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500

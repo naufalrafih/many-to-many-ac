@@ -5,6 +5,8 @@ import os
 
 app = Flask(__name__)
 
+ADVERSARY_PORT="5000"
+
 @app.route("/home", methods=["GET"])
 def home_page():
     try:
@@ -35,7 +37,7 @@ def initialize_cert_center():
             certcenter_ip_address = "10.0.0.3"
             key_b = os.urandom(6).hex()
             cur.execute("INSERT INTO certcenter (certcenter_name, certcenter_ip_address, key_b) VALUES (?, ?, ?)",
-                (certcenter_name, certcenter_ip_address, key_b))    
+                (certcenter_name, certcenter_ip_address, key_b))
             response_text = "Initialized"
             response_code = 200
         else:
@@ -45,6 +47,31 @@ def initialize_cert_center():
         con.commit()
         con.close()
         return response_text, response_code
+    except Exception as e:
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
+
+@app.route("/api/register/institute", methods=["POST"])
+def register_institute():
+    try:
+        data = request.get_json()
+        institute_name = data["institute_name"]
+        institute_ip_address = data["institute_ip_address"]
+        key_a = os.urandom(6).hex()
+
+        con = sqlite3.connect('db/cert-center.db')
+        cur = con.cursor()
+        cur.execute("INSERT INTO institutes (institute_name, institute_ip_address, key_a) VALUES (?, ?, ?)",
+            (institute_name, institute_ip_address, key_a))
+        con.commit()
+        con.close()
+
+        requests.packages.urllib3.disable_warnings()
+        r = requests.post(f'https://{institute_ip_address}:{ADVERSARY_PORT}/' + "api/register", verify=False, json=data)
+        if (r.ok):
+            response_text = "OK!"
+            response_code = 200
+            return response_text, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500
