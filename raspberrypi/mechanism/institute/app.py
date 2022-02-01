@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request
 import requests
 import sqlite3
+from Crypto.PublicKey import RSA
 
 app = Flask(__name__)
 
@@ -96,6 +97,37 @@ def initialize_asset():
         return response_text, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
+
+@app.route("/api/register", methods=["POST"])
+def register_institute():
+    try:
+        #Parse data
+        data = request.get_json()
+        institute_id = data["institute_id"]
+        institute_name = data["institute_name"]
+        institute_ip_address = data["institute_ip_address"]
+        key_a = data["key_a"]
+
+        #Generate public & private key
+        private_key = RSA.generate(2048)
+        public_key = private_key.public_key()
+        private_key_pem = private_key.export_key("PEM").decode("utf-8")
+        public_key_pem = public_key.export_key("PEM").decode("utf-8")
+
+        #Insert into DB
+        con = sqlite3.connect("db/institute-server.sql")
+        cur = con.cursor()
+        cur.execute("INSERT INTO institute (institute_id, institute_name, institute_ip_address, public_key, private_key, key_a) VALUES (?, ?, ?, ?, ?, ?)",
+                    (institute_id, institute_name, institute_ip_address, public_key_pem, private_key_pem, key_a))
+        con.commit()
+        con.close()
+
+        response_text = "OK!"
+        response_code = 200
+        return response_text, response_code
+    except Exception as e:
+        print(f"Error! Exception {e}")
         return f"Unsuccessful", 500
 
 if __name__ == "__main__":
