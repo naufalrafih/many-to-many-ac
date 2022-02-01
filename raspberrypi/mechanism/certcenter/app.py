@@ -23,6 +23,16 @@ def home_page():
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500
 
+@app.route("/home/register/institute", methods=["GET"])
+def home_register_institute():
+    try:
+        response_text = render_template('register_institute.html')
+        response_code = 200
+        return response_text, response_code
+    except Exception as e:
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
+
 @app.route("/api/initialize", methods=["POST"])
 def initialize_cert_center():
     try:
