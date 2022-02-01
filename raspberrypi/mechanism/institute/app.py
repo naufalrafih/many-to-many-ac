@@ -4,7 +4,7 @@ import sqlite3
 
 app = Flask(__name__)
 
-@app.route("/home")
+@app.route("/home", methods=["GET"])
 def hello_world():
     try:
         response_text = render_template("home.html")
@@ -13,7 +13,7 @@ def hello_world():
     except Exception as e:
         return f"Error! Exception: {e}", 500
     
-@app.route("/home/initialize")
+@app.route("/home/initialize", methods=["GET"])
 def initialize_institute():
     try:
         con = sqlite3.connect("db/institute-server.db")
@@ -29,7 +29,7 @@ def initialize_institute():
     except Exception as e:
         return f"Error! Exception: {e}", 500
 
-@app.route("/api/initialize", methods=("GET", "POST"))
+@app.route("/api/initialize", methods=["POST"])
 def api_initialize_institute():
     try:
         if request.method == "POST":
@@ -49,7 +49,7 @@ def api_initialize_institute():
     except Exception as e:
         return f"Error! Exception: {e}", 500
 
-@app.route("/api/initialize/certcenter", methods=("GET", "POST"))
+@app.route("/api/initialize/certcenter", methods=["POST"])
 def initialize_certcenter():
     try:
         # Create cert center data
@@ -73,7 +73,7 @@ def initialize_certcenter():
     except Exception as e:
         return f"Error! Exception : {e}", 500
 
-@app.route("/api/initialize/assets", methods=("GET", "POST"))
+@app.route("/api/initialize/assets", methods=["POST"])
 def initialize_asset():
     try:
         # Create cert center data

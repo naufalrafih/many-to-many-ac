@@ -5,7 +5,7 @@ import os
 
 app = Flask(__name__)
 
-@app.route("/home")
+@app.route("/home", methods=["GET"])
 def home_page():
     try:
         con = sqlite3.connect("db/cert-center.db")
@@ -20,7 +20,7 @@ def home_page():
     except Exception as e:
         return f"Error! Exception: {e}", 500
 
-@app.route("/api/initialize")
+@app.route("/api/initialize", methods=["POST"])
 def initialize_cert_center():
     try:
         con = sqlite3.connect('db/cert-center.db')
