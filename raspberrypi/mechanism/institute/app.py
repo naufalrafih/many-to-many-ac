@@ -5,6 +5,8 @@ from Crypto.PublicKey import RSA
 
 app = Flask(__name__)
 
+PORT="35753"
+
 @app.route("/home", methods=["GET"])
 def hello_world():
     try:
@@ -131,4 +133,4 @@ def register_institute():
         return f"Unsuccessful", 500
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',ssl_context=('secrets/cert.pem','secrets/key.pem'),debug=True)
+    app.run(host='0.0.0.0', port=PORT, ssl_context=('secrets/cert.pem','secrets/key.pem'), debug=True)

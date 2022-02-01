@@ -6,7 +6,7 @@ import json
 
 app = Flask(__name__)
 
-ADVERSARY_PORT="5000"
+PORT="35753"
 
 @app.route("/home", methods=["GET"])
 def home_page():
@@ -83,7 +83,7 @@ def register_institute():
         data_json.update(institute_id_json)
 
         requests.packages.urllib3.disable_warnings()
-        r = requests.post(f'https://{institute_ip_address}:{ADVERSARY_PORT}/' + "api/register", verify=False, json=data_json)
+        r = requests.post(f'https://{institute_ip_address}:{PORT}/' + "api/register", verify=False, json=data_json)
         if (r.ok):
             response_text = "OK!"
             response_code = 200
@@ -93,4 +93,4 @@ def register_institute():
         return f"Unsuccessful", 500
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',ssl_context=('secrets/cert.pem','secrets/key.pem'),debug=True)
+    app.run(host='0.0.0.0', port=PORT, ssl_context=('secrets/cert.pem','secrets/key.pem'), debug=True)
