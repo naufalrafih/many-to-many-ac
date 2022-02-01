@@ -79,7 +79,7 @@ def initialize_certcenter():
         return f"Error! Exception : {e}", 500
 
 @app.route("/api/initialize/institute")
-def initialize_institute():
+def initialize_asset():
     try:
         #Create cert center data
         data = request.get_json()
