@@ -55,7 +55,7 @@ def api_initialize_institute():
     except Exception as e:
         print(e)
         return f"Error! Exception: {e}", 500
-        
+
 @app.route("/api/initialize/certcenter")
 def initialize_certcenter():
     try:
