@@ -2,6 +2,7 @@ from flask import Flask, render_template
 import sqlite3
 import requests
 import os
+import json
 
 app = Flask(__name__)
 
@@ -74,10 +75,15 @@ def register_institute():
         cur.execute("INSERT INTO institutes (institute_name, institute_ip_address, key_a) VALUES (?, ?, ?)",
             (institute_name, institute_ip_address, key_a))
         con.commit()
+        institute_id = cur.execute("SELECT institute_id FROM institutes WHERE institute_name=? and institute_ip_address=?", (institute_name, institute_ip_address)).fetchall()[0][0]
         con.close()
 
+        institute_id_json = {"institute_id": institute_id}
+        data_json = json.loads(data)
+        data_json.update(institute_id_json)
+
         requests.packages.urllib3.disable_warnings()
-        r = requests.post(f'https://{institute_ip_address}:{ADVERSARY_PORT}/' + "api/register", verify=False, json=data)
+        r = requests.post(f'https://{institute_ip_address}:{ADVERSARY_PORT}/' + "api/register", verify=False, json=data_json)
         if (r.ok):
             response_text = "OK!"
             response_code = 200
