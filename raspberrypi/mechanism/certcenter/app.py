@@ -18,7 +18,8 @@ def home_page():
         response_code = 200
         return response_text, response_code
     except Exception as e:
-        return f"Error! Exception: {e}", 500
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
 
 @app.route("/api/initialize", methods=["POST"])
 def initialize_cert_center():
@@ -45,7 +46,8 @@ def initialize_cert_center():
         con.close()
         return response_text, response_code
     except Exception as e:
-        return f"Error! Exception: {e}", 500
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',ssl_context=('secrets/cert.pem','secrets/key.pem'),debug=True)

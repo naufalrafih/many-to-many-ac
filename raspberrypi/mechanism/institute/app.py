@@ -11,7 +11,8 @@ def hello_world():
         response_code = 200
         return response_text, response_code
     except Exception as e:
-        return f"Error! Exception: {e}", 500
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
     
 @app.route("/home/initialize", methods=["GET"])
 def initialize_institute():
@@ -27,7 +28,8 @@ def initialize_institute():
         response_code = 200
         return response_text, response_code
     except Exception as e:
-        return f"Error! Exception: {e}", 500
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
 
 @app.route("/api/initialize", methods=["POST"])
 def api_initialize_institute():
@@ -47,7 +49,8 @@ def api_initialize_institute():
         elif request.method == "GET":
             return "GET"
     except Exception as e:
-        return f"Error! Exception: {e}", 500
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
 
 @app.route("/api/initialize/certcenter", methods=["POST"])
 def initialize_certcenter():
@@ -71,7 +74,8 @@ def initialize_certcenter():
         response_code = 200
         return response_text, response_code
     except Exception as e:
-        return f"Error! Exception : {e}", 500
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
 
 @app.route("/api/initialize/assets", methods=["POST"])
 def initialize_asset():
@@ -94,7 +98,8 @@ def initialize_asset():
         response_code = 200
         return response_text, response_code
     except Exception as e:
-        return f"Error! Exception : {e}", 500
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',ssl_context=('secrets/cert.pem','secrets/key.pem'),debug=True)
