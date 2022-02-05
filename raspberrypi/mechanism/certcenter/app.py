@@ -25,6 +25,16 @@ def home_page():
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500
 
+@app.route("/home/register/user", methods=["GET"])
+def register_user():
+    try:
+        response_body = render_template("register_user.html")
+        response_code = 200
+        return response_body, response_code
+    except Exception as e:
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
+
 @app.route("/api/initialize", methods=["POST"])
 def initialize_cert_center():
     try:
@@ -70,6 +80,48 @@ def register_institute():
 
         response_code = 200
         return response_data, response_code
+    except Exception as e:
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
+
+@app.route("/api/register/user/scan", methods=["GET"])
+def register_user_scan():
+    try:
+        response_body = render_template("register_user_scan.html", scanned=scanned)
+        response_code = 200
+        return response_body, response_code
+    except Exception as e:
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
+
+@app.route("/api/register/user/data", methods=["POST"])
+def register_user_data():
+    try:
+        data = request.get_json()
+        user_name = data["user_name"]
+        uuid = data["uuid"]
+
+        con = sqlite3.connect("db/cert-center.db")
+        cur = con.cursor()
+
+        is_uuid_unique = True
+        rows = cur.execute("SELECT uuid from users").fetchall()
+        for row in range(len(rows)):
+            if rows[row][0] == uuid:
+                is_uuid_unique = False
+
+        if is_uuid_unique:
+            cur.execute("REPLACE INTO users (user_id, user_name, uuid) VALUES ((SELECT user_id FROM users WHERE user_name = ?), ?, ?)",
+                (user_name, user_name, uuid))
+            con.commit()
+            con.close()
+
+            response_body = "User registered successfully!"
+            response_code = 200
+        else:
+            response_body = "UUID already registered"
+            response_code = 400        
+        return response_body, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500

@@ -14,8 +14,8 @@ key_a TEXT NOT NULL
 
 CREATE TABLE assets (
 asset_id INTEGER PRIMARY KEY AUTOINCREMENT,
-asset_name TEXT NOT NULL,
-asset_ip_address TEXT NOT NULL
+asset_name TEXT NOT NULL UNIQUE,
+asset_ip_address TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE bookings (

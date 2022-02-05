@@ -6,13 +6,13 @@ key_b TEXT NOT NULL
 
 CREATE TABLE institutes (
 institute_id INTEGER PRIMARY KEY AUTOINCREMENT,
-institute_name TEXT NOT NULL,
-institute_ip_address TEXT NOT NULL,
-key_a TEXT NOT NULL
+institute_name TEXT NOT NULL UNIQUE,
+institute_ip_address TEXT NOT NULL UNIQUE,
+key_a TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE users (
 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-user_name TEXT NOT NULL,
-uuid TEXT NOT NULL
+user_name TEXT NOT NULL UNIQUE,
+uuid TEXT NOT NULL UNIQUE
 );
