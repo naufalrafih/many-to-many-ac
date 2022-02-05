@@ -18,9 +18,9 @@ def home_page():
             initialized=True
         else:
             initialized=False
-        response_text = render_template('home.html', initialized=initialized)
+        response_body = render_template('home.html', initialized=initialized)
         response_code = 200
-        return response_text, response_code
+        return response_body, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500
@@ -32,23 +32,20 @@ def initialize_cert_center():
         cur = con.cursor()
         cur.execute('SELECT * FROM certcenter')
         row = cur.fetchall()
-        print(row)
         if not row:
-            print("table is empty")
             certcenter_name = "certcenter"
-            certcenter_ip_address = "10.0.0.3"
+            certcenter_ip_address = request.remote_addr
             key_b = os.urandom(6).hex()
             cur.execute("INSERT INTO certcenter (certcenter_name, certcenter_ip_address, key_b) VALUES (?, ?, ?)",
                 (certcenter_name, certcenter_ip_address, key_b))
-            response_text = "Initialized"
+            response_body = "Initialized"
             response_code = 200
         else:
-            print("table is not empty")
-            response_text = "Already initialized"
+            response_body = "Already initialized"
             response_code = 500
         con.commit()
         con.close()
-        return response_text, response_code
+        return response_body, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500
@@ -69,11 +66,10 @@ def register_institute():
         con.commit()
         con.close()
 
-        response_data = {"institute_id": institute_id, "key_a": key_a}
-        response_data_json = json.dumps(response_data)
+        response_data = {"institute_id": institute_id, "institute_ip_address": institute_ip_address, "key_a": key_a}
 
         response_code = 200
-        return response_data_json, response_code
+        return response_data, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500

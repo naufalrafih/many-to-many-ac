@@ -42,7 +42,7 @@
             var url = window.location.protocol + "//" + window.location.host + "/api/initialize";
             alert("Initializing cert center!! Sending initialization request to " + url);
             var xmlHttp = new XMLHttpRequest();
-            xmlHttp.open("GET", url, true);
+            xmlHttp.open("POST", url, true);
             xmlHttp.onreadystatechange = function () {
                 if (xmlHttp.readyState == 4) {
                     if (xmlHttp.status == 200) {
