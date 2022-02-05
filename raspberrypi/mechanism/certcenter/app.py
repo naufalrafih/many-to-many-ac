@@ -4,6 +4,9 @@ import sqlite3
 import os
 import json
 
+import signal
+from pirc522 import RFID
+
 app = Flask(__name__)
 
 CERTCENTER_PORT=35753
@@ -27,6 +30,7 @@ def home_page():
 
 @app.route("/home/register/user", methods=["GET"])
 def register_user():
+    #BARU BIKIN PATH
     try:
         response_body = render_template("register_user.html")
         response_code = 200
@@ -86,9 +90,33 @@ def register_institute():
 
 @app.route("/api/register/user/scan", methods=["GET"])
 def register_user_scan():
+    #BELOM LANJUTIN
     try:
-        response_body = render_template("register_user_scan.html", scanned=scanned)
-        response_code = 200
+        rdr = RFID()
+        util = rdr.util()
+        util.debug = True
+        is_scanned = False
+
+        timeout = 10
+        print("Please place the card into the reader")
+        rdr.wait_for_tag(timeout=timeout)
+        (error, data) = rdr.request()
+        if not error:
+            print("Card detected")
+            is_scanned = True
+
+        if is_scanned:
+            (error, uid) = rdr.anticoll()
+            if not error:
+                print("Card read UID: "+str(uid[0])+","+str(uid[1])+","+str(uid[2])+","+str(uid[3]))
+                print(str(uid))
+                response_body = "OK!"
+                response_code = 200
+
+        #response_body = render_template("register_user_scan.html", scanned=scanned)
+        else:
+            response_body = "Reader timeout. Please try again."
+            response_code = "400"
         return response_body, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")

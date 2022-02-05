@@ -17,3 +17,6 @@ Option ```-subj``` digunakan untuk mengatur field sertifikat:
 | /CN=  | Common Name         |
 
 Option ```-addext 'subjectAltName=...'``` digunakan untuk mengatur field subjectAltName
+
+Generate fingerprint
+openssl x509 -noout -fingerprint -sha1 -inform pem -in cert.pem > fingerprint.txt
