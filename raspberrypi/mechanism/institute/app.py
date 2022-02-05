@@ -2,6 +2,7 @@ from flask import Flask, render_template, request
 import sqlite3
 from Crypto.PublicKey import RSA
 import json
+import requests
 
 app = Flask(__name__)
 
@@ -38,7 +39,42 @@ def initialize_institute():
 @app.route("/api/initialize", methods=["POST"])
 def api_initialize_institute():
     try:
-        return "OK."
+        data = request.get_json()
+        certcenter_ip_address = data["certcenter_ip_address"]
+        institute_name = data["institute_name"]
+
+        #Populate certcenter DB
+        con = sqlite3.connect("db/institute-server.db")
+        cur = con.cursor()
+        cur.execute("DELETE FROM certcenter")
+        cur.execute("INSERT INTO certcenter (certcenter_name, certcenter_ip_address) VALUES (?, ?)",
+                    ("Cert Center", certcenter_ip_address))
+
+        #Send request to Cert Center API /api/register/institute
+        request_body = json.dumps({"institute_name":institute_name})
+        response = requests.get(f"https://{certcenter_ip_address}:{CERTCENTER_PORT}/api/register/institute", verify="certs/certcenter.pem", json=request_body)
+        if (response.status_code == 200):
+            response_json = response.json()
+            private_key = RSA.generate(2048)
+            public_key = private_key.public_key()
+
+            #Variables to insert into DB
+            institute_ip_address = response_json["institute_ip_address"]
+            private_key_pem = private_key.export_key("PEM")
+            public_key_pem = public_key.export_key("PEM")
+            key_a = response_json["key_a"]
+
+            cur.execute("DELETE FROM institute")
+            cur.execute("INSERT INTO institute (institute_name, institute_ip_address, public_key, private_key, key_a) VALUES (?, ?, ?, ?, ?)",
+                        (institute_name, institute_ip_address, public_key_pem, private_key_pem, key_a))
+        else:
+            raise Exception("Request to Cert Center API /api/register/institute failed")
+
+        con.commit()
+        con.close()
+        response_text = "Successful."
+        response_code = 200
+        return response_text, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500
