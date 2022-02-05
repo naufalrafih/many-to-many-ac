@@ -2,7 +2,6 @@ from flask import Flask, render_template, request
 import requests
 import sqlite3
 from Crypto.PublicKey import RSA
-import time
 
 app = Flask(__name__)
 
@@ -52,7 +51,6 @@ def api_initialize_institute():
 
         #Send request to Cert Center API /api/register/institute
         request_body = {"institute_name":institute_name}
-        print(f"REQUEST TO CERTCENTER: {time.strftime('%H:%M:%S')}")
         response = requests.post(f"https://{certcenter_ip_address}:{CERTCENTER_PORT}/api/register/institute", verify="certs/certcenter.pem", json=request_body)
         if (response.status_code == 200):        
             response_json = response.json()
