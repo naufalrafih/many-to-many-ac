@@ -1,3 +1,4 @@
+### SSL Certificate
 Untuk membuat SSL certificate dan private key-nya menggunakan openSSL (version >=1.1.1):
 
     openssl req -x509 -newkey rsa:4096 -nodes \
@@ -18,5 +19,5 @@ Option ```-subj``` digunakan untuk mengatur field sertifikat:
 
 Option ```-addext 'subjectAltName=...'``` digunakan untuk mengatur field subjectAltName
 
-Generate fingerprint
-openssl x509 -noout -fingerprint -sha1 -inform pem -in cert.pem > fingerprint.txt
+### Generate fingerprint
+```openssl x509 -noout -fingerprint -sha1 -inform pem -in cert.pem > fingerprint.txt```
