@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request
 import sqlite3
-from requests.packages.urllib3.exceptions import SubjectAltNameWarning # type: ignore
 import requests
 import os
 import json
@@ -96,5 +95,4 @@ def register_institute():
         return f"Unsuccessful", 500
 
 if __name__ == "__main__":
-    requests.packages.urllib3.disable_warnings(SubjectAltNameWarning)
     app.run(host='0.0.0.0', port=CERTCENTER_PORT, ssl_context=('secrets/cert.pem','secrets/key.pem'), debug=True)
