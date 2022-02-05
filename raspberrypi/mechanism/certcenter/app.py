@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request
-import sqlite3
 import requests
+import sqlite3
 import os
 import json
 
@@ -8,7 +8,6 @@ app = Flask(__name__)
 
 CERTCENTER_PORT=35753
 INSTITUTE_PORT=35754
-server_directory = os.path.dirname(os.path.abspath(__file__))
 
 @app.route("/home", methods=["GET"])
 def home_page():
@@ -59,27 +58,22 @@ def register_institute():
     try:
         data = request.get_json()
         institute_name = data["institute_name"]
-        institute_ip_address = data["institute_ip_address"]
+        institute_ip_address = request.remote_addr
         key_a = os.urandom(6).hex()
 
         con = sqlite3.connect('db/cert-center.db')
         cur = con.cursor()
-        cur.execute("INSERT INTO institutes (institute_name, institute_ip_address, key_a) VALUES (?, ?, ?)",
-            (institute_name, institute_ip_address, key_a))
-        con.commit()
+        cur.execute("REPLACE INTO institutes (institute_id, institute_name, institute_ip_address, key_a) VALUES ((SELECT institute_id FROM institutes WHERE institute_name = ?), ?, ?, ?)",
+            (institute_name, institute_name, institute_ip_address, key_a))
         institute_id = cur.execute("SELECT institute_id FROM institutes WHERE institute_name=? and institute_ip_address=?", (institute_name, institute_ip_address)).fetchall()[0][0]
+        con.commit()
         con.close()
 
-        institute_id_json = {"institute_id": institute_id}
-        data_json = json.loads(data)
-        data_json.update(institute_id_json)
+        response_data = {"institute_id": institute_id, "key_a": key_a}
+        response_data_json = json.dumps(response_data)
 
-        requests.packages.urllib3.disable_warnings()
-        r = requests.post(f'https://{institute_ip_address}:{INSTITUTE_PORT}/' + "api/register", verify=f"{server_directory}/certs/{institute_name}.pem", json=data_json)
-        if (r.ok):
-            response_text = "OK!"
-            response_code = 200
-            return response_text, response_code
+        response_code = 200
+        return response_data_json, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500

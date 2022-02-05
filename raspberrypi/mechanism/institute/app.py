@@ -2,13 +2,13 @@ from flask import Flask, render_template, request
 import requests
 import sqlite3
 import os
+import json
 from Crypto.PublicKey import RSA
 
 app = Flask(__name__)
 
 CERTCENTER_PORT=35753
 INSTITUTE_PORT=35754
-server_directory = os.path.dirname(os.path.abspath(__file__))
 
 @app.route("/home", methods=["GET"])
 def hello_world():
