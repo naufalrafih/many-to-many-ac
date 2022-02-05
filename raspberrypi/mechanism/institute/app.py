@@ -12,9 +12,9 @@ INSTITUTE_PORT=35754
 @app.route("/home", methods=["GET"])
 def hello_world():
     try:
-        response_text = render_template("home.html")
+        response_body = render_template("home.html")
         response_code = 200
-        return response_text, response_code
+        return response_body, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500
@@ -29,9 +29,9 @@ def initialize_institute():
         else:
             initialized = False
 
-        response_text = render_template("initialize_institute.html", initialized=initialized)
+        response_body = render_template("initialize_institute.html", initialized=initialized)
         response_code = 200
-        return response_text, response_code
+        return response_body, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500
@@ -39,7 +39,6 @@ def initialize_institute():
 @app.route("/api/initialize", methods=["POST"])
 def api_initialize_institute():
     try:
-        print(f"INITIALIZE CALLED: {time.strftime('%H:%M:%S')}")
         data = request.get_json()
         certcenter_ip_address = data["certcenter_ip_address"]
         institute_name = data["institute_name"]
@@ -56,7 +55,6 @@ def api_initialize_institute():
         print(f"REQUEST TO CERTCENTER: {time.strftime('%H:%M:%S')}")
         response = requests.post(f"https://{certcenter_ip_address}:{CERTCENTER_PORT}/api/register/institute", verify="certs/certcenter.pem", json=request_body)
         if (response.status_code == 200):        
-            print(f"RESPONSE FROM CERTCENTER: {time.strftime('%H:%M:%S')}")
             response_json = response.json()
             private_key = RSA.generate(2048)
             public_key = private_key.public_key()
@@ -76,10 +74,9 @@ def api_initialize_institute():
 
         con.commit()
         con.close()
-        response_text = "Successful."
+        response_body = "Successful."
         response_code = 200
-        print(f"DONE: {time.strftime('%H:%M:%S')}")
-        return response_text, response_code
+        return response_body, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500
@@ -108,9 +105,9 @@ def register_asset():
         con.commit()
         con.close()
 
-        response_text = {"key_a":key_a}
+        response_body = {"key_a":key_a}
         response_code = 200
-        return response_text, response_code
+        return response_body, response_code
     except Exception as e:
         print(f"Error! Exception {e}")
         return f"Unsuccessful", 500
