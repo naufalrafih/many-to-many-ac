@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request
 import sqlite3
-from requests.packages.urllib3.exceptions import SubjectAltNameWarning
+from requests.packages.urllib3.exceptions import SubjectAltNameWarning # type: ignore
 import requests
 import os
 import json
