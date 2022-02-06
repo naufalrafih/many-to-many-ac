@@ -7,6 +7,9 @@ idna==3.3
 itsdangerous==2.0.1
 Jinja2==3.0.3
 MarkupSafe==2.0.1
+pi-rc522==2.2.1
 requests==2.27.1
+RPi.GPIO==0.7.0
+spidev==3.5
 urllib3==1.26.8
 Werkzeug==2.0.2
