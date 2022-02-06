@@ -14,6 +14,9 @@ uint16_t hostport = 35754;
 static const char fp[] PROGMEM = "ED:3F:4A:CC:DB:DB:57:A5:C8:39:AE:65:D7:59:33:94:0E:1D:56:E0";
 #include "functions.h"
 
+char * key_a;
+String asset_name = "rock";
+
 void setup() {
     Serial.begin(115200);
     delay(10);
@@ -34,30 +37,18 @@ void setup() {
     Serial.print("IP address:\t");
     Serial.println(WiFi.localIP());         // Send the IP address of the ESP8266 to the computer
 
+    register_asset(&key_a, asset_name);
+    while ((String) key_a == "FAILED") {
+        delay(1000);
+        Serial.println("Try getting key A again...");
+        register_asset(&key_a, asset_name);
+    }
 }
 
 void loop() {
     if (Serial.available() > 0) {
         int c = Serial.read();
-
-        //Request body
-        StaticJsonDocument<48> doc_request;
-        doc_request["asset_name"] = "lamp";
-
-        //Response body
-        StaticJsonDocument<48> doc_response;
-        
-        //Request
-        int response_code = request("POST","/api/register/asset",doc_request,doc_response);
-        if (response_code == 200) {
-            Serial.println("Request successful.");
-        } else {
-            Serial.println("Request unsuccessful.");
-            return;
-        }
-        
-        //Extract variable from response
-        const char * key_a = doc_response["key_a"];
-        Serial.printf("key_a: %s\n",key_a);
+        Serial.println("Pressed.");
+        Serial.print("Key_A: "); Serial.println(key_a);
     }
 }

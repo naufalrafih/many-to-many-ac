@@ -12,7 +12,7 @@ private_key TEXT NOT NULL,
 key_a TEXT NOT NULL
 );
 
-CREATE TABLE assets (,
+CREATE TABLE assets (
 asset_name TEXT PRIMARY KEY NOT NULL UNIQUE,
 asset_ip_address TEXT NOT NULL UNIQUE
 );
