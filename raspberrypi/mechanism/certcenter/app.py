@@ -91,7 +91,7 @@ def register_institute():
 @app.route("/api/register/user/scan", methods=["GET"])
 def register_user_scan():
     try:
-        rdr = RFID()
+        rdr = RFID_timeout()
         util = rdr.util()
         util.debug = True
         is_scanned = False
@@ -166,7 +166,7 @@ def register_user_data():
         return f"Unsuccessful", 500
 
 if __name__ == "__main__":
-    class my_class(RFID):
+    class RFID_timeout(RFID):
         def __init__(self, *args, **kwargs):
             super(my_class, self).__init__(*args, **kwargs)
         def wait_for_tag(self, timeout=0):
