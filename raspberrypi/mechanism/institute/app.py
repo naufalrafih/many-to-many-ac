@@ -90,21 +90,30 @@ def register_asset():
         print(f"Asset name: {asset_name}")
         print(f"Asset IP address: {asset_ip_address}")
 
-        #Inserting into database
-        con = sqlite3.connect("db/institute-server.db")
-        cur = con.cursor()
-        cur.execute("REPLACE INTO assets (asset_name, asset_ip_address) VALUES ((SELECT asset_name FROM assets WHERE asset_name = ?), ?)",
-                    (asset_name, asset_ip_address))
+        is_ipaddress_unique = True
+        rows = cur.execute("SELECT asset_ip_address from assets").fetchall()
+        for row in range(len(rows)):
+            if rows[row][0] == asset_ip_address:
+                is_ipaddress_unique = False
 
-        #Getting key_A for the reader
-        cur.execute("SELECT key_a FROM institute")
-        key_a = cur.fetchall()[0][0]
+        if is_ipaddress_unique:
+            con = sqlite3.connect("db/institute-server.db")
+            cur = con.cursor()
+            cur.execute("REPLACE INTO assets (asset_name, asset_ip_address) VALUES (?, ?)",
+                        (asset_name, asset_ip_address))
 
-        con.commit()
-        con.close()
+            #Getting key_A for the reader
+            cur.execute("SELECT key_a FROM institute")
+            key_a = cur.fetchall()[0][0]
 
-        response_body = {"key_a":key_a}
-        response_code = 200
+            con.commit()
+            con.close()
+
+            response_body = {"key_a":key_a}
+            response_code = 200
+        else:
+            response_body = "IP address already registered"
+            response_code = 400
         return response_body, response_code
     except Exception as e:
         print(f"Error! Exception {e}")
