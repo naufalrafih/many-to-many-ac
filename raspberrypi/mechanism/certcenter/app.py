@@ -168,7 +168,7 @@ def register_user_data():
 if __name__ == "__main__":
     class RFID_timeout(RFID):
         def __init__(self, *args, **kwargs):
-            super(my_class, self).__init__(*args, **kwargs)
+            super(RFID_timeout, self).__init__(*args, **kwargs)
         def wait_for_tag(self, timeout=0):
             # enable IRQ on detect
             start_time = time.time()
