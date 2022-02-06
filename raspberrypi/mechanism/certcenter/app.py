@@ -5,7 +5,7 @@ import os
 import json
 
 import signal
-#from pirc522 import RFID
+from pirc522 import RFID
 
 app = Flask(__name__)
 

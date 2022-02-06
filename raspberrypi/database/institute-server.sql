@@ -12,9 +12,8 @@ private_key TEXT NOT NULL,
 key_a TEXT NOT NULL
 );
 
-CREATE TABLE assets (
-asset_id INTEGER PRIMARY KEY AUTOINCREMENT,
-asset_name TEXT NOT NULL UNIQUE,
+CREATE TABLE assets (,
+asset_name TEXT PRIMARY KEY NOT NULL UNIQUE,
 asset_ip_address TEXT NOT NULL UNIQUE
 );
 
