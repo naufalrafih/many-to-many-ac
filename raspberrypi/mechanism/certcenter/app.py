@@ -118,8 +118,6 @@ def register_user_scan():
             hexarray = [ db_key_b[i:i+2] for i in range(0, int(len(db_key_b)),2) ]
             key_b = [ int(hexarray[i], 16) for i in range(6) ]
             print(key_b)
-            key_b = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
-            print(key_b)
             for i in range(16):
                 util.write_trailer(i, (0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF), (0x7F, 0x07, 0x88), 0x00, (key_b[0], key_b[1], key_b[2], key_b[3], key_b[4], key_b[5]))
             response_body = {"uid": uid}
