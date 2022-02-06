@@ -93,7 +93,7 @@ def register_asset():
         #Inserting into database
         con = sqlite3.connect("db/institute-server.db")
         cur = con.cursor()
-        cur.execute("REPLACE INTO assets (asset_name, asset_ip_address) VALUES ((SELECT asset_name FROM assets WHERE asset_name = ?), ?)",
+        cur.execute("REPLACE INTO assets (asset_name, asset_ip_address) VALUES (?, ?)",
                     (asset_name, asset_ip_address))
 
         #Getting key_A for the reader
