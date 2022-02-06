@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register User</title>
+</head>
+<body>
+    <h1>Register User</h1>
+    <div id="register-div">
+        <button id="initialize-register" onclick="initializeRegister()">Click to register a user</button> 
+    </div>
+
+
+
+    <script>
+        //Function call order:
+        // 1. initializeRegister()
+        // 2. scanCard()
+        // 3. inputUserData
+        // 4. registerUser
+
+        var register_div = document.getElementById("register-div")
+        var UID = ""
+
+        function registerUser() {
+            var formElement = document.getElementById("register-form")
+            var form = new FormData(formElement)
+            var formObject = {}
+            form.forEach((value,key) => {
+                formObject[key] = value
+            })
+            formObject["uid"] = UID 
+            var formJson = JSON.stringify(formObject)
+
+            var url = window.location.protocol + "//" + window.location.host + "/api/register/user/data"
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("POST", url, true);
+            xmlHttp.setRequestHeader("Content-Type","application/json")
+            xmlHttp.onreadystatechange = function () {
+                if (xmlHttp.readyState == 4) {
+                    if (xmlHttp.status == 200) {
+                        register_div.innerHTML = "Registration successful!"
+                    } else {
+                        register_div.innerHTML = "Registration unsuccessful. Please reload page."
+                    }
+                }
+            }
+            xmlHttp.send(formJson)
+        }
+
+        function inputUserData() {
+            register_div.innerHTML = `
+                <form id="register-form" name="register-form">
+                    <dl>
+                        <dt>Input user name (must be unique):</dt>
+                        <dd><input type="text" name="user_name" value="" required></dd>
+                    </dl>
+                </form>
+                <button onclick="registerUser()">Register</button>`
+        }
+
+        function scanCard() {
+            var timer_span = document.getElementById('timer')
+            var url = window.location.protocol + "//" + window.location.host + "/api/register/user/scan"
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", url, true);
+            xmlHttp.onreadystatechange = function () {
+                if (xmlHttp.readyState == 4) {
+                    if (xmlHttp.status == 200) {
+                        clearInterval(timer_interval)
+                        UID = JSON.parse(xmlHttp.responseText)["uid"]
+                        register_div.innerHTML = "Card scanned. UID: " + UID
+                        setTimeout(() => {
+                            inputUserData()
+                        },2000)
+                    } else {
+                        clearInterval(timer_interval)
+                        register_div.innerHTML = "Request unsuccessful. Please reload page."
+                    }
+                }
+            }
+            xmlHttp.send()
+            
+            //Displaying timeout
+            timer_span.innerHTML = 10
+            const timer_interval = setInterval(() => {
+                if (timer_span.innerHTML == 0) {
+                    window.clearInterval(timer_interval)
+                    register_div.innerHTML = "Timed out. Please reload page."
+                } else {
+                    timer_span.innerHTML -= 1
+                }
+            }, 1000)
+        }
+
+        function initializeRegister() {
+            register_div.innerHTML = "Please scan card within 10 seconds. <br> <p>Timeout: <span id='timer'></span> seconds</p>"
+            scanCard()
+        }
+    </script>
+</body>
+</html>

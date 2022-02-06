@@ -32,6 +32,7 @@
             var url = window.location.protocol + "//" + window.location.host + "/api/register/institute"
             var xmlHttp = new XMLHttpRequest();
             xmlHttp.open("POST", url, true);
+            xmlHttp.setRequestHeader("Content-Type","application/json")
             xmlHttp.onreadystatechange = function () {
                 if (xmlHttp.readyState == 4) {
                     if (xmlHttp.status == 200) {
