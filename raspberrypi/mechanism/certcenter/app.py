@@ -48,7 +48,7 @@ def initialize_cert_center():
         row = cur.fetchall()
         if not row:
             certcenter_name = "certcenter"
-            certcenter_ip_address = request.remote_addr
+            certcenter_ip_address = request.host.split(':')[0]
             key_b = os.urandom(6).hex()
             cur.execute("INSERT INTO certcenter (certcenter_name, certcenter_ip_address, key_b) VALUES (?, ?, ?)",
                 (certcenter_name, certcenter_ip_address, key_b))
