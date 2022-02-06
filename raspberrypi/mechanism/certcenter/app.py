@@ -99,7 +99,7 @@ def register_user_scan():
         timeout = 10
         print("Please place the card into the reader")
         rdr.wait_for_tag(timeout = timeout)
-        (error, data) = rdr.rzequest()
+        (error, data) = rdr.request()
         if not error:
             print("Card detected")
             is_scanned = True
