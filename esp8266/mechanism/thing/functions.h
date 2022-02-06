@@ -33,7 +33,7 @@ int request(const char *method, const char *path, JsonDocument& doc_request, Jso
     HTTPClient https;
 
     if (https.begin(wifiClient, hostserver, hostport, path, is_https)) {
-        Serial.printf("[HTTPS] %s...\n",(String) method);
+        Serial.printf("[HTTPS] %s...\n", (String) method);
         // start connection and send HTTP header
 
         String request_body;
@@ -50,7 +50,7 @@ int request(const char *method, const char *path, JsonDocument& doc_request, Jso
         // httpCode will be negative on error
         if (httpCode > 0) {
             // HTTP header has been send and Server response header has been handled
-            Serial.printf("[HTTPS] %s... code: %d\n",(String) method, httpCode);
+            Serial.printf("[HTTPS] %s... code: %d\n", (String) method, httpCode);
 
             // file found at server
             if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
@@ -64,8 +64,35 @@ int request(const char *method, const char *path, JsonDocument& doc_request, Jso
                 return 200;
             }
         } else {
-            Serial.printf("[HTTPS] %s... failed, error: %s\n",(String) method, https.errorToString(httpCode).c_str());
+            Serial.printf("[HTTPS] %s... failed, error: %s\n", (String) method, https.errorToString(httpCode).c_str());
             return httpCode;
         }
     }
+}
+
+void register_asset(char **key_a, String asset_name) {
+    
+    //Request body
+    StaticJsonDocument<48> doc_request;
+    doc_request["asset_name"] = asset_name;
+
+    //Response body
+    StaticJsonDocument<48> doc_response;
+
+    //Request
+    int response_code = request("POST", "/api/register/asset", doc_request, doc_response);
+    if (response_code == 200) {
+        Serial.println("Success getting key A.");
+    } else {
+        Serial.println("Unsuccessful getting key A.");
+        const char * temp = "FAILED";
+        *key_a = strdup(temp);
+        return;
+    }
+
+    //Extract variable from response
+    const char * temp = doc_response["key_a"];
+    *key_a = strdup(temp);
+    Serial.printf("key_a: %s\n", *key_a);
+    return;
 }
