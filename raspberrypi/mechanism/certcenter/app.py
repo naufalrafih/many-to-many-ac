@@ -149,13 +149,13 @@ def register_user_data():
         con = sqlite3.connect("db/cert-center.db")
         cur = con.cursor()
 
-        is_uuid_unique = True
+        is_uid_unique = True
         rows = cur.execute("SELECT uid from users").fetchall()
         for row in range(len(rows)):
             if rows[row][0] == uid:
-                is_uuid_unique = False
+                is_uid_unique = False
 
-        if is_uuid_unique:
+        if is_uid_unique:
             cur.execute("REPLACE INTO users (user_id, user_name, uid) VALUES ((SELECT user_id FROM users WHERE user_name = ?), ?, ?)",
                 (user_name, user_name, uid))
             con.commit()
