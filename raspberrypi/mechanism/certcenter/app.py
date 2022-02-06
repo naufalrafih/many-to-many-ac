@@ -3,7 +3,7 @@ import requests
 import sqlite3
 import os
 import json
-
+import time
 import signal
 from pirc522 import RFID
 
@@ -166,4 +166,28 @@ def register_user_data():
         return f"Unsuccessful", 500
 
 if __name__ == "__main__":
+    class my_class(RFID):
+        def __init__(self, *args, **kwargs):
+            super(my_class, self).__init__(*args, **kwargs)
+        def wait_for_tag(self, timeout=0):
+            # enable IRQ on detect
+            start_time = time.time()
+            self.init()
+            self.irq.clear()
+            self.dev_write(0x04, 0x00)
+            self.dev_write(0x02, 0xA0)
+            # wait for it
+            waiting = True
+            while waiting and (timeout == 0 or ((time.time() - start_time) < timeout)):
+                self.init()
+                #self.irq.clear()
+                self.dev_write(0x04, 0x00)
+                self.dev_write(0x02, 0xA0)
+                self.dev_write(0x09, 0x26)
+                self.dev_write(0x01, 0x0C)
+                self.dev_write(0x0D, 0x87)
+                waiting = not self.irq.wait(0.1)
+            self.irq.clear()
+            self.init()
+
     app.run(host='0.0.0.0', port=CERTCENTER_PORT, ssl_context=('secrets/cert.pem','secrets/key.pem'), debug=True)
