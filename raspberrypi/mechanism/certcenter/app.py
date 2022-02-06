@@ -6,6 +6,7 @@ import json
 import time
 import signal
 from pirc522 import RFID
+import RPi.GPIO as GPIO
 
 app = Flask(__name__)
 
@@ -126,6 +127,8 @@ def register_user_scan():
         else:
             response_body = "Reader timeout. Please try again."
             response_code = 504
+
+        GPIO.cleanup()
         return response_body, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
