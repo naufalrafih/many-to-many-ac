@@ -94,7 +94,6 @@ def register_user_scan():
         rdr = RFID_timeout()
         util = rdr.util()
         util.debug = True
-        is_scanned = False
 
         timeout = 10
         print("Please place the card into the reader")
@@ -104,34 +103,40 @@ def register_user_scan():
             print("Card detected")
             (error, uid) = rdr.anticoll()
             if not error:
-                print("Card read UID: "+str(uid[0])+","+str(uid[1])+","+str(uid[2])+","+str(uid[3]))
-                uid_str = ""
-                for i in range(4):
-                    if (uid[i] < 16):
-                        temp_x = hex(uid[i])
-                        temp_x = temp_x[:2] + "0" + temp_x[-1]
-                    else:
-                        temp_x = hex(uid[i])
-                    uid_str += temp_x[2:] + ":"
-                uid_str = uid_str[:-1]
+                (key_error, back_data) = rdr.read(1)
+                if not key_error:
+                    default_key = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
+                    access_bits = (0x7F, 0x07, 0x88)
+                    util.set_tag(uid)
+                    util.auth(rdr.auth_b, default_key)
 
-                con = sqlite3.connect("db/cert-center.db")
-                cur = con.cursor()
-                db_key_b = cur.execute("SELECT key_b FROM certcenter").fetchall()[0][0]
-                hexarray = [ db_key_b[i:i+2] for i in range(0, int(len(db_key_b)),2) ]
-                key_b = [ int(hexarray[i], 16) for i in range(6) ]
-                print(f"Key B: {key_b}")
+                    print("Card read UID: "+str(uid[0])+","+str(uid[1])+","+str(uid[2])+","+str(uid[3]))
+                    uid_str = ""
+                    for i in range(4):
+                        if (uid[i] < 16):
+                            temp_x = hex(uid[i])
+                            temp_x = temp_x[:2] + "0" + temp_x[-1]
+                        else:
+                            temp_x = hex(uid[i])
+                        uid_str += temp_x[2:] + ":"
+                    uid_str = uid_str[:-1]
 
-                default_key = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
-                access_bits = (0x7F, 0x07, 0x88)
-                util.set_tag(uid)
-                util.auth(rdr.auth_b, default_key)
-                for i in range(16):
-                    util.write_trailer(i, (default_key[0], default_key[1], default_key[2], default_key[3], default_key[4], default_key[5]),
-                                        access_bits, 0x00, (key_b[0], key_b[1], key_b[2], key_b[3], key_b[4], key_b[5]))
-                util.deauth()
-                response_body = {"uid": uid_str}
-                response_code = 200
+                    con = sqlite3.connect("db/cert-center.db")
+                    cur = con.cursor()
+                    db_key_b = cur.execute("SELECT key_b FROM certcenter").fetchall()[0][0]
+                    hexarray = [ db_key_b[i:i+2] for i in range(0, int(len(db_key_b)),2) ]
+                    key_b = [ int(hexarray[i], 16) for i in range(6) ]
+                    print(f"Key B: {key_b}")
+
+                    for i in range(16):
+                        util.write_trailer(i, (default_key[0], default_key[1], default_key[2], default_key[3], default_key[4], default_key[5]),
+                                            access_bits, 0x00, (key_b[0], key_b[1], key_b[2], key_b[3], key_b[4], key_b[5]))
+                    util.deauth()
+                    response_body = {"uid": uid_str}
+                    response_code = 200
+                else:
+                    response_body = "Key does not match default key. Card already registered?"
+                    response_code = 400
             else:
                 response_body = "Anticollision error"
                 response_code = 504
