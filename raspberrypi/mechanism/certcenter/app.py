@@ -114,14 +114,14 @@ def register_user_scan():
                         temp_x = hex(uid[i])
                     uid_str += temp_x[2:] + ":"
                 uid_str = uid_str[:-1]
-                
+
                 con = sqlite3.connect("db/cert-center.db")
                 cur = con.cursor()
                 db_key_b = cur.execute("SELECT key_b FROM certcenter").fetchall()[0][0]
                 hexarray = [ db_key_b[i:i+2] for i in range(0, int(len(db_key_b)),2) ]
                 key_b = [ int(hexarray[i], 16) for i in range(6) ]
                 print(f"Key B: {key_b}")
-                
+
                 default_key = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
                 access_bits = (0x7F, 0x07, 0x88)
                 util.set_tag(uid)
@@ -129,7 +129,6 @@ def register_user_scan():
                 for i in range(16):
                     util.write_trailer(i, (default_key[0], default_key[1], default_key[2], default_key[3], default_key[4], default_key[5]),
                                         access_bits, 0x00, (key_b[0], key_b[1], key_b[2], key_b[3], key_b[4], key_b[5]))
-                util.dump()
                 util.deauth()
                 response_body = {"uid": uid_str}
                 response_code = 200
