@@ -5,7 +5,7 @@ import os
 import json
 
 import signal
-from pirc522 import RFID
+#from pirc522 import RFID
 
 app = Flask(__name__)
 
@@ -90,7 +90,6 @@ def register_institute():
 
 @app.route("/api/register/user/scan", methods=["GET"])
 def register_user_scan():
-    #BELOM LANJUTIN
     try:
         rdr = RFID()
         util = rdr.util()
@@ -99,8 +98,8 @@ def register_user_scan():
 
         timeout = 10
         print("Please place the card into the reader")
-        rdr.wait_for_tag(timeout=timeout)
-        (error, data) = rdr.request()
+        rdr.wait_for_tag(timeout = timeout)
+        (error, data) = rdr.rzequest()
         if not error:
             print("Card detected")
             is_scanned = True
@@ -109,14 +108,26 @@ def register_user_scan():
             (error, uid) = rdr.anticoll()
             if not error:
                 print("Card read UID: "+str(uid[0])+","+str(uid[1])+","+str(uid[2])+","+str(uid[3]))
-                print(str(uid))
-                response_body = "OK!"
-                response_code = 200
+            for i in range(4):
+                uid = hex(uid[i]) + ":"
+            uid = uid[:-1]
 
-        #response_body = render_template("register_user_scan.html", scanned=scanned)
+            con = sqlite3.connect("db/cert-center.db")
+            cur = con.cursor()
+            db_key_b = cur.execute("SELECT key_b FROM certcenter").fetchall()[0][0]
+            hexarray = [ db_key_b[i:i+2] for i in range(0, int(len(db_key_b)),2) ]
+            key_b = [ int(hexarray[i], 16) for i in range(6) ]
+            print(key_b)
+            key_b = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
+            print(key_b)
+            for i in range(16):
+                util.write_trailer(i, (0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF), (0x7F, 0x07, 0x88), 0x00, (key_b[0], key_b[1], key_b[2], key_b[3], key_b[4], key_b[5]))
+            response_body = {"uid": uid}
+            response_code = 200
+
         else:
             response_body = "Reader timeout. Please try again."
-            response_code = "400"
+            response_code = 504
         return response_body, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
