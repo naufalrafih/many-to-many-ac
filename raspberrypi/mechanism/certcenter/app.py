@@ -160,7 +160,7 @@ def register_user_data():
             response_code = 200
         else:
             response_body = "UUID already registered"
-            response_code = 400        
+            response_code = 400  
         return response_body, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
