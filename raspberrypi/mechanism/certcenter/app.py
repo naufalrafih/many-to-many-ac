@@ -164,7 +164,7 @@ def register_user_data():
         for row in range(len(rows)):
             if rows[row][0] == uid:
                 is_uid_unique = False
-        
+
         is_username_unique = True
         rows = cur.execute("SELECT user_name from users").fetchall()
         for row in range(len(rows)):
@@ -180,7 +180,7 @@ def register_user_data():
             response_code = 200
 
         elif not is_uid_unique:
-            response_body = "UUID already registered"
+            response_body = "UID already registered"
             response_code = 400
         elif not is_username_unique:
             response_body = "Username already registered"
