@@ -1,12 +1,9 @@
 from flask import Flask, render_template, request
-import requests
 import sqlite3
 import os
-import json
 import time
-import signal
-from pirc522 import RFID
-import RPi.GPIO as GPIO
+from pirc522 import RFID # type: ignore
+import RPi.GPIO as GPIO # type: ignore
 
 app = Flask(__name__)
 

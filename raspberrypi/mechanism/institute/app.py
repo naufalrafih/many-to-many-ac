@@ -91,14 +91,14 @@ def register_asset():
         print(f"Asset IP address: {asset_ip_address}")
 
         is_ipaddress_unique = True
+        con = sqlite3.connect("db/institute-server.db")
+        cur = con.cursor()
         rows = cur.execute("SELECT asset_ip_address from assets").fetchall()
         for row in range(len(rows)):
             if rows[row][0] == asset_ip_address:
                 is_ipaddress_unique = False
 
         if is_ipaddress_unique:
-            con = sqlite3.connect("db/institute-server.db")
-            cur = con.cursor()
             cur.execute("REPLACE INTO assets (asset_name, asset_ip_address) VALUES (?, ?)",
                         (asset_name, asset_ip_address))
 
