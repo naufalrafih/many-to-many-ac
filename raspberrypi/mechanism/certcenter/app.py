@@ -31,7 +31,6 @@ def home_page():
 
 @app.route("/home/register/user", methods=["GET"])
 def register_user():
-    #BARU BIKIN PATH
     try:
         response_body = render_template("register_user.html")
         response_code = 200
@@ -109,10 +108,15 @@ def register_user_scan():
             (error, uid) = rdr.anticoll()
             if not error:
                 print("Card read UID: "+str(uid[0])+","+str(uid[1])+","+str(uid[2])+","+str(uid[3]))
+            uid_str = ""
             for i in range(4):
-                uid = hex(uid[i]) + ":"
-            uid = uid[:-1]
-
+                if (uid[i] < 16):
+                    temp_x = hex(uid[i])
+                    temp_x = temp_x[:2] + "0" + temp_x[-1]
+                else:
+                    temp_x = hex(uid[i])
+                uid_str += temp_x[2:] + ":"
+            uid_str = uid_str[:-1]
             con = sqlite3.connect("db/cert-center.db")
             cur = con.cursor()
             db_key_b = cur.execute("SELECT key_b FROM certcenter").fetchall()[0][0]
@@ -121,7 +125,8 @@ def register_user_scan():
             print(key_b)
             for i in range(16):
                 util.write_trailer(i, (0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF), (0x7F, 0x07, 0x88), 0x00, (key_b[0], key_b[1], key_b[2], key_b[3], key_b[4], key_b[5]))
-            response_body = {"uid": uid}
+            util.deauth()
+            response_body = {"uid": uid_str}
             response_code = 200
 
         else:
@@ -139,20 +144,20 @@ def register_user_data():
     try:
         data = request.get_json()
         user_name = data["user_name"]
-        uuid = data["uuid"]
+        uid = data["uid"]
 
         con = sqlite3.connect("db/cert-center.db")
         cur = con.cursor()
 
-        is_uuid_unique = True
-        rows = cur.execute("SELECT uuid from users").fetchall()
+        is_uid_unique = True
+        rows = cur.execute("SELECT uid from users").fetchall()
         for row in range(len(rows)):
-            if rows[row][0] == uuid:
-                is_uuid_unique = False
+            if rows[row][0] == uid:
+                is_uid_unique = False
 
-        if is_uuid_unique:
-            cur.execute("REPLACE INTO users (user_id, user_name, uuid) VALUES ((SELECT user_id FROM users WHERE user_name = ?), ?, ?)",
-                (user_name, user_name, uuid))
+        if is_uid_unique:
+            cur.execute("REPLACE INTO users (user_id, user_name, uid) VALUES ((SELECT user_id FROM users WHERE user_name = ?), ?, ?)",
+                (user_name, user_name, uid))
             con.commit()
             con.close()
 
@@ -160,7 +165,7 @@ def register_user_data():
             response_code = 200
         else:
             response_body = "UUID already registered"
-            response_code = 400  
+            response_code = 400
         return response_body, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
