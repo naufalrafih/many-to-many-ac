@@ -159,17 +159,26 @@ def register_user_data():
         for row in range(len(rows)):
             if rows[row][0] == uid:
                 is_uid_unique = False
+        
+        is_username_unique = True
+        rows = cur.execute("SELECT user_name from users").fetchall()
+        for row in range(len(rows)):
+            if rows[row][0] == user_name:
+                is_username_unique = False
 
-        if is_uid_unique:
+        if is_uid_unique and is_username_unique:
             cur.execute("REPLACE INTO users (user_id, user_name, uid) VALUES ((SELECT user_id FROM users WHERE user_name = ?), ?, ?)",
                 (user_name, user_name, uid))
             con.commit()
             con.close()
-
             response_body = "User registered successfully!"
             response_code = 200
-        else:
+
+        elif not is_uid_unique:
             response_body = "UUID already registered"
+            response_code = 400
+        elif not is_username_unique:
+            response_body = "Username already registered"
             response_code = 400
         return response_body, response_code
     except Exception as e:
