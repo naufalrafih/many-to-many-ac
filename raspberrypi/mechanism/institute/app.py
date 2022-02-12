@@ -147,13 +147,13 @@ def booking_data():
                 if (db_start_date > requested_start_date > db_end_date) or (db_start_date > requested_end_date > db_end_date):
                     return "Asset's already booked", 400
                 else:
-                    book_id = str(uuid.uuid4().hex)
+                    book_id = uuid.uuid4().hex
                     cur.execute("INSERT INTO bookings (book_id, otp_counter, asset_name, start_date, end_date) VALUES (?, ?, ?, ?, ?)",
                                 (book_id, counter, asset_name, start_date, end_date))
         
         book_id = cur.execute("SELECT book_id FROM bookings WHERE asset_name = ? and start_date = ? and end_date = ?",
                         (asset_name, start_date, end_date)).fetchall()[0][0]
-        seed = base64.b32encode(bytearray(str(book_id), "ascii")).decode("utf-8")
+        seed = base64.b32encode(bytearray(book_id, "ascii")).decode("utf-8")
         hotp = pyotp.HOTP(seed)
         otp_data = hotp.at(counter)
 
