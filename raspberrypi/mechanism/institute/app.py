@@ -4,6 +4,7 @@ import sqlite3
 import pyotp
 import base64
 import uuid
+import datetime
 
 app = Flask(__name__)
 
@@ -158,9 +159,39 @@ def booking_data():
 
         cur.commit()
         con.close()
+
         response_body = {"book_id": book_id, "otp": otp_data}
         response_code = 200
         return response_body, response_code
+    except Exception as e:
+        print(f"Error! Exception {e}")
+        return f"unsuccessful", 500
+
+@app.route("/api/booking/getasset", methods=["GET"])
+def booking_getasset():
+    try:
+        data = request.get_json()
+        start_date = data["start_date"]
+        end_date = data["end_date"]
+
+        con = sqlite3.connect("db/institute-server.db")
+        cur = con.cursor()
+        rows = cur.execute("SELECT * FROM bookings").fetchall()
+
+        assets = []
+        requested_start_date = datetime.strptime(start_date, "%Y/%m/%d")
+        requested_end_date = datetime.strptime(end_date, "%Y/%m/%d")
+        for row in range(len(rows)):
+            db_start_date = datetime.strptime(rows[row][3], "%Y/%m/%d")
+            db_end_date = datetime.strptime(rows[row][4], "%Y/%m/%d")
+            if not ((db_start_date > requested_start_date > db_end_date) or (db_start_date > requested_end_date > db_end_date)):
+                assets.append(rows[row][2])
+
+        cur.commit()
+        con.close()
+
+        response_body = {"assets": assets}
+        response_code = 200
     except Exception as e:
         print(f"Error! Exception {e}")
         return f"unsuccessful", 500
