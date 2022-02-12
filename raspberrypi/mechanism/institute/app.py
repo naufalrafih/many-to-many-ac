@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request
 import requests
 import sqlite3
-from Crypto.PublicKey import RSA
 import pyotp
 import base64
+import uuid
 
 app = Flask(__name__)
 
@@ -56,19 +56,15 @@ def api_initialize_institute():
         response = requests.post(f"https://{certcenter_ip_address}:{CERTCENTER_PORT}/api/register/institute", verify="certs/certcenter.pem", json=request_body)
         if (response.status_code == 200):        
             response_json = response.json()
-            private_key = RSA.generate(2048)
-            public_key = private_key.public_key()
 
             #Variables to insert into DB
             institute_id = response_json["institute_id"]
             institute_ip_address = response_json["institute_ip_address"]
-            private_key_pem = private_key.export_key("PEM")
-            public_key_pem = public_key.export_key("PEM")
             key_a = response_json["key_a"]
 
             cur.execute("DELETE FROM institute")
-            cur.execute("INSERT INTO institute (institute_id, institute_name, institute_ip_address, public_key, private_key, key_a) VALUES (?, ?, ?, ?, ?, ?)",
-                        (institute_id, institute_name, institute_ip_address, public_key_pem, private_key_pem, key_a))
+            cur.execute("INSERT INTO institute (institute_id, institute_name, institute_ip_address, key_a) VALUES (?, ?, ?, ?)",
+                        (institute_id, institute_name, institute_ip_address, key_a))
         else:
             raise Exception("Request to Cert Center API /api/register/institute failed")
 
@@ -148,23 +144,21 @@ def booking_data():
                 db_start_date = datetime.strptime(rows[row][3], "%Y/%m/%d")
                 db_end_date = datetime.strptime(rows[row][4], "%Y/%m/%d")
                 if (db_start_date > requested_start_date > db_end_date) or (db_start_date > requested_end_date > db_end_date):
-                    return "Asset's not available", 400
+                    return "Asset's already booked", 400
                 else:
-                    cur.execute("INSERT INTO bookings (otp_counter, asset_name, start_date, end_date) VALUES (?, ?, ?, ?)",
-                                (counter, asset_name, start_date, end_date))
+                    book_id = str(uuid.uuid4().hex)
+                    cur.execute("INSERT INTO bookings (book_id, otp_counter, asset_name, start_date, end_date) VALUES (?, ?, ?, ?, ?)",
+                                (book_id, counter, asset_name, start_date, end_date))
         
         book_id = cur.execute("SELECT book_id FROM bookings WHERE asset_name = ? and start_date = ? and end_date = ?",
                         (asset_name, start_date, end_date)).fetchall()[0][0]
         seed = base64.b32encode(bytearray(str(book_id), "ascii")).decode("utf-8")
         hotp = pyotp.HOTP(seed)
-        hotp = pyotp.HOTP(seed)
         otp_data = hotp.at(counter)
-
-        #ttd digital
 
         cur.commit()
         con.close()
-        response_body = {"book_id": book_id, "otp": otp_data} #ttd digital dulu
+        response_body = {"book_id": book_id, "otp": otp_data}
         response_code = 200
         return response_body, response_code
     except Exception as e:

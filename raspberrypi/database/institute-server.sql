@@ -7,8 +7,6 @@ CREATE TABLE institute (
 institute_id INTEGER PRIMARY KEY,
 institute_name TEXT,
 institute_ip_address TEXT NOT NULL,
-public_key TEXT NOT NULL,
-private_key TEXT NOT NULL,
 key_a TEXT NOT NULL
 );
 
@@ -18,7 +16,7 @@ asset_ip_address TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE bookings (
-book_id INTEGER PRIMARY KEY AUTOINCREMENT,
+book_id TEXT PRIMARY KEY,
 otp_counter INTEGER NOT NULL,
 asset_name TEXT NOT NULL,
 start_date TEXT NOT NULL, /* #FORMAT: YYYY/MM/DD */
