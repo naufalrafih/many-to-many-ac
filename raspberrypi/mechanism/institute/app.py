@@ -2,6 +2,8 @@ from flask import Flask, render_template, request
 import requests
 import sqlite3
 from Crypto.PublicKey import RSA
+import pyotp
+import base64
 
 app = Flask(__name__)
 
@@ -127,6 +129,7 @@ def booking_data():
         start_date = data["start_date"]
         end_date = data["end_date"]
         uid = data["uid"]
+        counter = 0
 
         is_booking_new = True
         con = sqlite3.connect("db/institute-server.db")
@@ -137,18 +140,33 @@ def booking_data():
                 is_booking_new = False
 
         if is_booking_new:
-            # cek lagi tanggalnya dulu barangnya kepake ga
-            cur.execute("INSERT INTO bookings (otp_counter, asset_name, start_date, end_date) VALUES (0, ?, ?, ?)",
-                        (asset_name, start_date, end_date))
-        institute_id = cur.execute("SELECT institute_id FROM institutes WHERE institute_name=? and institute_ip_address=?", (institute_name, institute_ip_address)).fetchall()[0][0]
-        book_id = cur.execute("SELECT book_id FROM bookings WHERE asset_name = ")
-            #langsung siapin ttd digital dst
+            rows = cur.execute("SELECT * FROM bookings WHERE asset_name = ?", (asset_name,)).fetchall()
+            requested_start_date = datetime.strptime(start_date, "%Y/%m/%d")
+            requested_end_date = datetime.strptime(end_date, "%Y/%m/%d")
+
+            for row in range(len(rows)):
+                db_start_date = datetime.strptime(rows[row][3], "%Y/%m/%d")
+                db_end_date = datetime.strptime(rows[row][4], "%Y/%m/%d")
+                if (db_start_date > requested_start_date > db_end_date) or (db_start_date > requested_end_date > db_end_date):
+                    return "Asset's not available", 400
+                else:
+                    cur.execute("INSERT INTO bookings (otp_counter, asset_name, start_date, end_date) VALUES (?, ?, ?, ?)",
+                                (counter, asset_name, start_date, end_date))
+        
+        book_id = cur.execute("SELECT book_id FROM bookings WHERE asset_name = ? and start_date = ? and end_date = ?",
+                        (asset_name, start_date, end_date)).fetchall()[0][0]
+        seed = base64.b32encode(bytearray(str(book_id), "ascii")).decode("utf-8")
+        hotp = pyotp.HOTP(seed)
+        hotp = pyotp.HOTP(seed)
+        otp_data = hotp.at(counter)
+
+        #ttd digital
 
         cur.commit()
         con.close()
-
-        response_body = "OK!"
+        response_body = {"book_id": book_id, "otp": otp_data} #ttd digital dulu
         response_code = 200
+        return response_body, response_code
     except Exception as e:
         print(f"Error! Exception {e}")
         return f"unsuccessful", 500
