@@ -119,5 +119,39 @@ def register_asset():
         print(f"Error! Exception {e}")
         return f"Unsuccessful", 500
 
+@app.route("/api/booking/data", methods=["POST"])
+def booking_data():
+    try:
+        data = request.get_json()
+        asset_name = data["asset_name"]
+        start_date = data["start_date"]
+        end_date = data["end_date"]
+        uid = data["uid"]
+
+        is_booking_new = True
+        con = sqlite3.connect("db/institute-server.db")
+        cur = con.cursor()
+        rows = cur.execute("SELECT * FROM bookings").fetchall()
+        for row in range(len(rows)):
+            if (rows[row[2]] == asset_name) and (rows[row[3]] == start_date) and (rows[row[4]] == end_date):
+                is_booking_new = False
+
+        if is_booking_new:
+            # cek lagi tanggalnya dulu barangnya kepake ga
+            cur.execute("INSERT INTO bookings (otp_counter, asset_name, start_date, end_date) VALUES (0, ?, ?, ?)",
+                        (asset_name, start_date, end_date))
+        institute_id = cur.execute("SELECT institute_id FROM institutes WHERE institute_name=? and institute_ip_address=?", (institute_name, institute_ip_address)).fetchall()[0][0]
+        book_id = cur.execute("SELECT book_id FROM bookings WHERE asset_name = ")
+            #langsung siapin ttd digital dst
+
+        cur.commit()
+        con.close()
+
+        response_body = "OK!"
+        response_code = 200
+    except Exception as e:
+        print(f"Error! Exception {e}")
+        return f"unsuccessful", 500
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=INSTITUTE_PORT, ssl_context=('secrets/cert.pem','secrets/key.pem'), debug=True)

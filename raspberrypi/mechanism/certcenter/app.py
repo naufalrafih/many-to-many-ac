@@ -187,6 +187,48 @@ def register_user_data():
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500
 
+@app.route("/api/booking/scan", methods=["GET"])
+def booking_scan():
+    try:
+        rdr = RFID_timeout()
+        util = rdr.util()
+        util.debug = True
+
+        timeout = 10
+        print("Please place the card into the reader")
+        rdr.wait_for_tag(timeout = timeout)
+        (error, data) = rdr.request()
+        if not error:
+            print("Card detected")
+            (error, uid) = rdr.anticoll()
+            if not error:
+                util.set_tag(uid)
+                print("Card read UID: "+str(uid[0])+","+str(uid[1])+","+str(uid[2])+","+str(uid[3]))
+                uid_str = ""
+                for i in range(4):
+                    if (uid[i] < 16):
+                        temp_x = hex(uid[i])
+                        temp_x = temp_x[:2] + "0" + temp_x[-1]
+                    else:
+                        temp_x = hex(uid[i])
+                    uid_str += temp_x[2:] + ":"
+                uid_str = uid_str[:-1]
+
+                response_body = {"uid": uid_str}
+                response_code = 200
+        
+            else:
+                response_body = "Anticollision error"
+                response_code = 504
+        else:
+            response_body = "Card not scanned"
+            response_code = 504
+        GPIO.cleanup()
+        return response_body, response_code
+    except Exception as e:
+        print(f"Error! Exception: {e}")
+        return f"Unsusccessful", 500
+
 if __name__ == "__main__":
     class RFID_timeout(RFID):
         def __init__(self, *args, **kwargs):
