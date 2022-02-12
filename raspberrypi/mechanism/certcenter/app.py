@@ -4,6 +4,7 @@ import os
 import time
 from pirc522 import RFID # type: ignore
 import RPi.GPIO as GPIO # type: ignore
+import requests
 
 app = Flask(__name__)
 
@@ -42,7 +43,7 @@ def booking_page():
         response_body = render_template("booking_page.html")
         response_code = 200
         return response_body, response_code
-    except:
+    except Exception as e:
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500
 
@@ -234,6 +235,36 @@ def booking_scan():
             response_body = "Card not scanned"
             response_code = 504
         GPIO.cleanup()
+        return response_body, response_code
+    except Exception as e:
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
+
+@app.route("/api/booking/getasset", methods=["GET"])
+def get_institute_asset():
+    try:
+        data = request.get_json()
+        institute_name = data["institute_name"]
+        start_date = data["start_date"]
+        end_date = data["end_date"]
+
+        #Get institute IP address from DB
+        con = sqlite3.connect("db/cert-center.db")
+        cur = con.cursor()
+        institute_ip_address = cur.execute("SELECT institute_ip_address FROM institutes WHERE institute_name = ?",(institute_name)).fetchall()[0][0]
+
+        request_body = {
+            "start_date":start_date,
+            "end_date":end_date
+        }
+
+        response = requests.post(f"https://{institute_ip_address}:{INSTITUTE_PORT}/api/register/institute", verify=f"certs/{institute_name}.pem", json=request_body)
+        if (response.status_code == 200):        
+            assets = response.json()
+            response_body = assets
+            response_code = 200
+        else:
+            raise Exception("Request to Institute API /api/booking/getasset failed")
         return response_body, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
