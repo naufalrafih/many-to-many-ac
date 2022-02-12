@@ -239,6 +239,22 @@ def booking_scan():
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500
 
+@app.route("/api/booking/data", methods=["POST"])
+def api_booking_data():
+    try:
+        data = request.get_json()
+        institute_name = data["institute_name"]
+        asset_name = data["asset_name"]
+        start_date = data["start_date"]
+        end_date = data["end_date"]
+        uid = date["uid"]
+
+        response_body = "OK!"
+        response_code = 200
+    except Exception as e:
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
+
 def get_institute_list():
     try:
         con = sqlite3.connect("db/cert-center.db")
