@@ -36,6 +36,16 @@ def register_user():
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500
 
+@app.route("/home/booking", methods=["GET"])
+def booking_page():
+    try:
+        response_body = render_template("booking_page.html")
+        response_code = 200
+        return response_body, response_code
+    except:
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
+
 @app.route("/api/initialize", methods=["POST"])
 def initialize_cert_center():
     try:
@@ -227,7 +237,18 @@ def booking_scan():
         return response_body, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
-        return f"Unsusccessful", 500
+        return f"Unsuccessful", 500
+
+def get_institute_list():
+    try:
+        con = sqlite3.connect("db/cert-center.db")
+        cur = con.cursor()
+        rows = cur.execute("SELECT institute_name FROM institutes").fetchall()
+        rows = [row[0] for row in rows]
+        return rows
+    except Exception as e:
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
 
 if __name__ == "__main__":
     class RFID_timeout(RFID):
