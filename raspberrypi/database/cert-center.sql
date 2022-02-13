@@ -1,18 +1,18 @@
 CREATE TABLE certcenter (
-certcenter_name TEXT PRIMARY KEY,
+certcenter_id INTEGER PRIMARY KEY,
 certcenter_ip_address TEXT NOT NULL,
-key_b TEXT NOT NULL
+master_key INTEGER NOT NULL,
+public_key INTEGER NOT NULL
 );
 
 CREATE TABLE institutes (
-institute_id INTEGER PRIMARY KEY AUTOINCREMENT,
+institute_id INTEGER PRIMARY KEY,
 institute_name TEXT NOT NULL UNIQUE,
 institute_ip_address TEXT NOT NULL UNIQUE,
-key_a TEXT NOT NULL UNIQUE
+institute_key INTEGER NOT NULL UNIQUE
 );
 
 CREATE TABLE users (
-user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+uid INTEGER PRIMARY KEY,
 user_name TEXT NOT NULL UNIQUE,
-uid TEXT NOT NULL UNIQUE
 );
