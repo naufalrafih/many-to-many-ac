@@ -2,7 +2,8 @@ CREATE TABLE certcenter (
 certcenter_id INTEGER PRIMARY KEY,
 certcenter_ip_address TEXT NOT NULL,
 master_key INTEGER NOT NULL,
-public_key INTEGER NOT NULL
+public_key INTEGER NOT NULL,
+certcenter_key INTEGER NOT NULL
 );
 
 CREATE TABLE institutes (

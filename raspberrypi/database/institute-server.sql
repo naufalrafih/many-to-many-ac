@@ -12,7 +12,7 @@ public_key INTEGER NOT NULL
 );
 
 CREATE TABLE assets (
-asset_name TEXT PRIMARY KEY NOT NULL,
+asset_name TEXT PRIMARY KEY,
 asset_ip_address TEXT NOT NULL UNIQUE
 );
 
