@@ -19,7 +19,7 @@ asset_ip_address TEXT NOT NULL UNIQUE
 CREATE TABLE bookings (
 book_id TEXT PRIMARY KEY,
 asset_name TEXT NOT NULL,
-start_date TEXT NOT NULL, /* #FORMAT: YYYYMMDD */
-end_date TEXT NOT NULL, /* FORMAT: YYYYMMDD */
+start_date TEXT NOT NULL, /* #FORMAT: DDMMYYYY */
+end_date TEXT NOT NULL, /* FORMAT: DDMMYYYY */
 FOREIGN KEY(asset_name) REFERENCES assets(asset_name)
 );
