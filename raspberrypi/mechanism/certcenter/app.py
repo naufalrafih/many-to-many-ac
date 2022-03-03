@@ -278,10 +278,13 @@ def api_booking_data():
         asset_name = data["asset_name"]
         start_date = data["start_date"]
         end_date = data["end_date"]
-        uid = date["uid"]
+        uid = data["uid"]
 
         response_body = "OK!"
         response_code = 200
+    except Exception as e:
+        print(f"Error! Exception: {e}")
+        return f"Unsuccessful", 500
 
 def get_institute_list():
     try:
