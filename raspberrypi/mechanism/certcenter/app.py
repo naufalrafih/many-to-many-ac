@@ -120,12 +120,12 @@ def register_user_scan():
             print("Card detected")
             (error, uid) = rdr.anticoll()
             if not error:
+                util.set_tag(uid)
+                default_key = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
+                util.auth(rdr.auth_b, default_key)
                 (key_error, back_data) = rdr.read(1)
                 if not key_error:
-                    default_key = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
                     access_bits = (0x7F, 0x07, 0x88)
-                    util.set_tag(uid)
-                    util.auth(rdr.auth_b, default_key)
                     print("Card read UID: "+str(uid[0])+","+str(uid[1])+","+str(uid[2])+","+str(uid[3]))
 
                     con = sqlite3.connect("db/cert-center.db")
@@ -261,7 +261,7 @@ def get_institute_asset():
         }
 
         response = requests.post(f"https://{institute_ip_address}:{INSTITUTE_PORT}/api/register/institute", verify=f"certs/{institute_name}.pem", json=request_body)
-        if (response.status_code == 200):        
+        if (response.status_code == 200):
             assets = response.json()
             response_body = assets
             response_code = 200
@@ -281,7 +281,7 @@ def api_booking_data():
         asset_name = data["asset_name"]
         start_date = data["start_date"]
         end_date = data["end_date"]
-        
+
         #Get institute IP address from DB
         con = sqlite3.connect("db/cert-center.db")
         cur = con.cursor()
@@ -297,7 +297,7 @@ def api_booking_data():
         }
 
         response = requests.post(f"https://{institute_ip_address}:{INSTITUTE_PORT}/api/booking/data", verify=f"certs/{institute_name}.pem", json=request_body)
-        if (response.status_code == 200):        
+        if (response.status_code == 200):
             book_id = response.json()["book_id"]
         else:
             raise Exception("Request to Institute API /api/booking/data failed")
@@ -314,52 +314,47 @@ def api_booking_data():
             print("Card detected")
             (error, uid) = rdr.anticoll()
             if not error:
-                (key_error, back_data) = rdr.read(1)
-                if not key_error:
-                    con = sqlite3.connect("db/cert-center.db")
-                    cur = con.cursor()
-                    certcenter_id = cur.execute("SELECT certcenter_id FROM certcenter").fetchall()[0][0]
-                    public_key = cur.execute("SELECT public_key FROM certcenter").fetchall()[0][0]
-                    certcenter_key = cur.execute("SELECT certcenter_key FROM certcenter").fetchall()[0][0]
-                    con.commit()
-                    con.close()
+                con = sqlite3.connect("db/cert-center.db")
+                cur = con.cursor()
+                certcenter_id = cur.execute("SELECT certcenter_id FROM certcenter").fetchall()[0][0]
+                public_key = cur.execute("SELECT public_key FROM certcenter").fetchall()[0][0]
+                certcenter_key = cur.execute("SELECT certcenter_key FROM certcenter").fetchall()[0][0]
+                con.commit()
+                con.close()
 
-                    keyij, keyij_error = generate_keyij(certcenter_key, certcenter_id, public_key)
-                    if not keyij_error:
-                        keyij_array = int_to_intarray(keyij)
-                        print(f"Key ij: {keyij}")
+                keyij, keyij_error = generate_keyij(certcenter_key, certcenter_id, public_key)
+                if not keyij_error:
+                    keyij_array = int_to_intarray(keyij)
+                    print(f"Key ij: {keyij}")
 
-                        util.set_tag(uid)
-                        util.auth(rdr.auth_b, keyij_array)
-                        print("Card read UID: "+str(uid[0])+","+str(uid[1])+","+str(uid[2])+","+str(uid[3]))
+                    util.set_tag(uid)
+                    util.auth(rdr.auth_b, keyij_array)
+                    print("Card read UID: "+str(uid[0])+","+str(uid[1])+","+str(uid[2])+","+str(uid[3]))
 
-                        block = 6
-                        booking_data = util.rfid.read(block)
-                        while (booking_data != [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) and (block <= 66):
-                            block += 4
-                            if (block <= 63):
-                                booking_data = util.read_out(block)
-                        
-                        if (block < 66):
-                            rdr.write((block-2), str_to_intarray(start_date).append(str_to_intarray(end_date)))
-                            rdr.write((block-1), str_to_intarray(asset_name))
-                            rdr.write(block, str_to_intarray(book_id))
+                    block = 6
+                    booking_data = util.rfid.read(block)
+                    while (booking_data != [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) and (block <= 66):
+                        block += 4
+                        if (block <= 63):
+                            booking_data = util.read_out(block)
 
-                            response_body = "Data written successfully"
-                            response_code = 200
-                        else:
-                            response_body = "Card is full"
-                            response_code = 400
-                        util.deauth()
+                    if (block < 66):
+                        rdr.write((block-2), str_to_intarray(start_date).append(str_to_intarray(end_date)))
+                        rdr.write((block-1), str_to_intarray(asset_name))
+                        rdr.write(block, str_to_intarray(book_id))
 
-                        response_body = {"book_id": book_id, "asset_name": asset_name, "start_date": start_date, "end_date": end_date}
+                        response_body = "Data written successfully"
                         response_code = 200
                     else:
-                        response_body = "Failed to generate keyij"
-                        response_code = 500
+                        response_body = "Card is full"
+                        response_code = 400
+                    util.deauth()
+
+                    response_body = {"book_id": book_id, "asset_name": asset_name, "start_date": start_date, "end_date": end_date}
+                    response_code = 200
                 else:
-                    response_body = "Key does not match default key. Card already registered?"
-                    response_code = 400
+                    response_body = "Failed to generate keyij"
+                    response_code = 500
             else:
                 response_body = "Anticollision error"
                 response_code = 504
@@ -367,7 +362,7 @@ def api_booking_data():
             response_body = "Card not scanned"
             response_code = 504
         GPIO.cleanup()
-        
+
         return response_body, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
