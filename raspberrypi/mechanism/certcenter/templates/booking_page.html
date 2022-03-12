@@ -15,9 +15,9 @@
                     <option value="{{ institute }}">{{ institute }}</option>
                 {% endfor %}
             </select>
-            <dt>Start Date (DD/MM/YYYY):</dt>
+            <dt>Start Date (DDMMYYYY):</dt>
             <dd><input type="text" name="start-date" value="" required></dd>
-            <dt>End Date (DD/MM/YYYY):</dt>
+            <dt>End Date (DDMMYYYY):</dt>
             <dd><input type="text" name="end-date" value="" required></dd>
         </form>
         <br>
@@ -25,6 +25,10 @@
     </div>
 
     <script>
+        //Function call order:
+        //1. choose_asset() <== after submitting the form
+        //2. scan_card() <== after choosing available assets
+        //3. send_booking() <== after card is scanned.
         var bookingData = {}
         var bookingFormDiv = document.getElementById("booking-form-div")
 
