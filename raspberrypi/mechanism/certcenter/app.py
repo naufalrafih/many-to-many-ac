@@ -63,7 +63,7 @@ def initialize_cert_center():
             master_key = number.getPrime(47, os.urandom)
             public_key = number.getPrime(48, os.urandom)
             certcenter_key = generate_entity_key(master_key, certcenter_id, public_key)
-            
+
             cur.execute("INSERT INTO certcenter (certcenter_id, certcenter_ip_address, master_key, public_key, certcenter_key) VALUES (?, ?, ?, ?, ?)",
                 (certcenter_id, certcenter_ip_address, master_key, public_key, certcenter_key))
             response_body = "Initialized"
@@ -91,7 +91,7 @@ def register_institute():
         master_key = cur.execute('SELECT * FROM certcenter').fetchall()[0][2]
         public_key = cur.execute('SELECT * FROM certcenter').fetchall()[0][3]
         institute_key = generate_entity_key(master_key, institute_id, public_key)
-        
+
         cur.execute("REPLACE INTO institutes (institute_id, institute_name, institute_ip_address, institute_key) VALUES (?, ?, ?, ?)",
             (institute_id, institute_name, institute_ip_address, institute_key))
         certcenter_id = cur.execute('SELECT * FROM certcenter').fetchall()[0][0]
@@ -241,9 +241,10 @@ def booking_scan():
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500
 
-@app.route("/api/booking/getasset", methods=["GET"])
+@app.route("/api/booking/getasset", methods=["POST"])
 def get_institute_asset():
     try:
+        print(request.data)
         data = request.get_json()
         institute_name = data["institute_name"]
         start_date = data["start_date"]
@@ -261,7 +262,7 @@ def get_institute_asset():
             "end_date":end_date
         }
 
-        response = requests.post(f"https://{institute_ip_address}:{INSTITUTE_PORT}/api/register/institute", verify=f"certs/{institute_name}.pem", json=request_body)
+        response = requests.get(f"https://{institute_ip_address}:{INSTITUTE_PORT}/api/booking/getasset", verify=f"certs/{institute_name}.pem", json=request_body)
         if (response.status_code == 200):
             assets = response.json()
             response_body = assets
@@ -369,19 +370,22 @@ def api_booking_data():
         print(f"Error! Exception: {e}")
         return f"Unsuccessful", 500
 
-def get_institute_list():
-    try:
-        con = sqlite3.connect("db/cert-center.db")
-        cur = con.cursor()
-        rows = cur.execute("SELECT institute_name FROM institutes").fetchall()
-        rows = [row[0] for row in rows]
+@app.context_processor
+def utility_processor():
+    def get_institute_list():
+        try:
+            con = sqlite3.connect("db/cert-center.db")
+            cur = con.cursor()
+            rows = cur.execute("SELECT institute_name FROM institutes").fetchall()
+            rows = [row[0] for row in rows]
 
-        con.commit()
-        con.close()
-        return rows
-    except Exception as e:
-        print(f"Error! Exception: {e}")
-        return f"Unsuccessful", 500
+            con.commit()
+            con.close()
+            return rows
+        except Exception as e:
+            print(f"Error! Exception: {e}")
+            return f"Unsuccessful", 500
+    return dict(get_institute_list=get_institute_list)
 
 def generate_entity_key(a, id, c):
     return pow(a, id, c)

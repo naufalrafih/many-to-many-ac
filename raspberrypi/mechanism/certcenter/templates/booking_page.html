@@ -97,15 +97,19 @@
             var instituteName = instituteSelect.options[instituteSelect.selectedIndex].value
 
             var instituteFormElement = document.getElementById("institute-form")
-            var instituteForm = new FormData(instituteFormElement)
+            var instituteFormData = new FormData(instituteFormElement)
+            var instituteForm = {}
+            instituteFormData.forEach(function (value,key) {
+                instituteForm[key] = value
+            })
 
             bookingData["institute_name"] = instituteName
             bookingData["start_date"] = instituteForm["start-date"]
             bookingData["end_date"] = instituteForm["end-date"]
-
+            console.log(bookingData)
             var url = window.location.protocol + "//" + window.location.host + "/api/booking/getasset";
             var xmlHttp = new XMLHttpRequest();
-            xmlHttp.open("GET", url, true);
+            xmlHttp.open("POST", url, true);
             xmlHttp.setRequestHeader("Content-Type","application/json")
             xmlHttp.onreadystatechange = function () {
                 if (xmlHttp.readyState == 4) {
