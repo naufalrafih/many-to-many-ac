@@ -123,6 +123,7 @@ def register_user_scan():
                 util.set_tag(uid)
                 default_key = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
                 util.auth(rdr.auth_b, default_key)
+                util.do_auth(1)
                 (key_error, back_data) = rdr.read(1)
                 if not key_error:
                     access_bits = (0x7F, 0x07, 0x88)
