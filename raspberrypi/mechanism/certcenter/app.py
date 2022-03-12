@@ -1,7 +1,3 @@
-from msilib import gen_uuid
-from sys import set_coroutine_origin_tracking_depth
-from click import secho
-from numpy import block
 from flask import Flask, render_template, request # type: ignore
 import sqlite3
 import os
