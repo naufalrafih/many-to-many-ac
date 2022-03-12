@@ -244,7 +244,6 @@ def booking_scan():
 @app.route("/api/booking/getasset", methods=["POST"])
 def get_institute_asset():
     try:
-        print(request.data)
         data = request.get_json()
         institute_name = data["institute_name"]
         start_date = data["start_date"]
@@ -293,8 +292,8 @@ def api_booking_data():
 
         request_body = {
             "asset_name": asset_name,
-            "start_date":start_date,
-            "end_date":end_date,
+            "start_date": start_date,
+            "end_date": end_date,
             "uid": uid
         }
 
