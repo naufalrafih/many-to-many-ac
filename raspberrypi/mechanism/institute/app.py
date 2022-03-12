@@ -180,16 +180,24 @@ def booking_getasset():
         cur = con.cursor()
         rows = cur.execute("SELECT * FROM bookings").fetchall()
 
-        assets = []
+        #Search assets that are booked during the time window
+        booked_assets = []
         requested_start_date = datetime.strptime(start_date, "%d%m%Y")
         requested_end_date = datetime.strptime(end_date, "%d%m%Y")
-        for row in rows:
+        for row in rows: #Iterate every booking
             db_start_date = datetime.strptime(row[3], "%d%m%Y")
             db_end_date = datetime.strptime(row[4], "%d%m%Y")
             is_start_date_inbetween = db_start_date <= requested_start_date <= db_end_date
             is_end_date_inbetween = db_start_date <= requested_end_date <= db_end_date
-            if not (is_start_date_inbetween or is_end_date_inbetween):
-                assets.append(row[2])
+            if (is_start_date_inbetween or is_end_date_inbetween):
+                booked_assets.append(row[2]) #Append assets that are booked during the time window to booked_assets
+
+        #Append assets that are unbooked
+        rows = cur.execute("SELECT asset_name FROM assets").fetchall()
+        assets = []
+        for row in rows:
+            if row[0] not in booked_assets:
+                assets.append(row[0])
 
         cur.commit()
         con.close()
