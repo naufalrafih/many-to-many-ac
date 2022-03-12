@@ -1,10 +1,8 @@
 from flask import Flask, render_template, request
 import requests
 import sqlite3
-import pyotp
-import base64
 import uuid
-import datetime
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -162,7 +160,7 @@ def booking_data():
                 response_body = {"book_id": book_id, "uid":uid, "asset_name":asset_name, "start_date":start_date, "end_date":end_date}
                 response_code = 200
 
-        cur.commit()
+        con.commit()
         con.close()
         return response_body, response_code
     except Exception as e:
@@ -185,12 +183,12 @@ def booking_getasset():
         requested_start_date = datetime.strptime(start_date, "%d%m%Y")
         requested_end_date = datetime.strptime(end_date, "%d%m%Y")
         for row in rows: #Iterate every booking
-            db_start_date = datetime.strptime(row[3], "%d%m%Y")
-            db_end_date = datetime.strptime(row[4], "%d%m%Y")
+            db_start_date = datetime.strptime(row[2], "%d%m%Y")
+            db_end_date = datetime.strptime(row[3], "%d%m%Y")
             is_start_date_inbetween = db_start_date <= requested_start_date <= db_end_date
             is_end_date_inbetween = db_start_date <= requested_end_date <= db_end_date
             if (is_start_date_inbetween or is_end_date_inbetween):
-                booked_assets.append(row[2]) #Append assets that are booked during the time window to booked_assets
+                booked_assets.append(row[1]) #Append assets that are booked during the time window to booked_assets
 
         #Append assets that are unbooked
         rows = cur.execute("SELECT asset_name FROM assets").fetchall()
@@ -199,7 +197,7 @@ def booking_getasset():
             if row[0] not in booked_assets:
                 assets.append(row[0])
 
-        cur.commit()
+        con.commit()
         con.close()
 
         response_body = {"assets": assets}
