@@ -137,7 +137,8 @@ def register_user_scan():
                     con.commit()
                     con.close()
 
-                    keyij, keyij_error = generate_keyij(certcenter_key, certcenter_id, public_key)
+                    uid_int = intarray_to_int(uid[:-1])
+                    keyij, keyij_error = generate_keyij(certcenter_key, uid_int, public_key)
                     if not keyij_error:
                         keyij_array = int_to_intarray(keyij)
                         print(f"Key ij: {keyij}")
@@ -147,7 +148,6 @@ def register_user_scan():
                                                 access_bits, 0x00, (keyij_array[0], keyij_array[1], keyij_array[2], keyij_array[3], keyij_array[4], keyij_array[5]))
                         util.deauth()
 
-                        uid_int = intarray_to_int(uid[:-1])
                         response_body = {"uid": uid_int}
                         response_code = 200
                     else:
@@ -277,7 +277,7 @@ def get_institute_asset():
 def api_booking_data():
     try:
         data = request.get_json()
-        uid = data["uid"]
+        uid_int = data["uid"]
         institute_name = data["institute_name"]
         asset_name = data["asset_name"]
         start_date = data["start_date"]
@@ -294,7 +294,7 @@ def api_booking_data():
             "asset_name": asset_name,
             "start_date": start_date,
             "end_date": end_date,
-            "uid": uid
+            "uid": uid_int
         }
 
         response = requests.post(f"https://{institute_ip_address}:{INSTITUTE_PORT}/api/booking/data", verify=f"certs/{institute_name}.pem", json=request_body)
@@ -323,7 +323,7 @@ def api_booking_data():
                 con.commit()
                 con.close()
 
-                keyij, keyij_error = generate_keyij(certcenter_key, certcenter_id, public_key)
+                keyij, keyij_error = generate_keyij(certcenter_key, uid_int, public_key)
                 if not keyij_error:
                     keyij_array = int_to_intarray(keyij)
                     print(f"Key ij: {keyij}")
@@ -333,11 +333,16 @@ def api_booking_data():
                     print("Card read UID: "+str(uid[0])+","+str(uid[1])+","+str(uid[2])+","+str(uid[3]))
 
                     block = 6
-                    booking_data = util.rfid.read(block)
+                    auth_error = util.do_auth(block)
+                    (read_error, booking_data) = util.rfid.read(block)
+                    print("Auth Error:",auth_error)
+                    print("Read Error:",read_error)
+                    print("Booking Data:",booking_data)
                     while (booking_data != [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) and (block <= 66):
                         block += 4
                         if (block <= 63):
                             booking_data = util.read_out(block)
+                            print(booking_data)
 
                     if (block < 66):
                         rdr.write((block-2), str_to_intarray(start_date).append(str_to_intarray(end_date)))
