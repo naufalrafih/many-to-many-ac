@@ -130,11 +130,12 @@ def booking_data():
         for row in rows:
             if (row[2] == asset_name) and (row[3] == start_date) and (row[4] == end_date):
                 is_booking_new = False
+                old_booking = row
 
         #In case booking already exists
         if not is_booking_new:
-            response_body = "Booking already exist."
-            response_code =  400
+            response_body = {"book_id": old_booking[0], "uid":old_booking[1], "asset_name":old_booking[2], "start_date":old_booking[3], "end_date":old_booking[4]}
+            response_code =  200
         else: #In case booking doesn't exist yet  
             #Check if asset is already booked during those dates or not.
             is_booked = False
@@ -154,7 +155,7 @@ def booking_data():
                 response_body = "Asset is already booked"
                 response_code = 400
             else: #If asset is unbooked
-                book_id = uuid.uuid4().int
+                book_id = uuid.uuid4().hex
                 cur.execute("INSERT INTO bookings (book_id, uid, asset_name, start_date, end_date) VALUES (?, ?, ?, ?, ?)",
                             (book_id, uid, asset_name, start_date, end_date))       
                 response_body = {"book_id": book_id, "uid":uid, "asset_name":asset_name, "start_date":start_date, "end_date":end_date}
@@ -183,12 +184,12 @@ def booking_getasset():
         requested_start_date = datetime.strptime(start_date, "%d%m%Y")
         requested_end_date = datetime.strptime(end_date, "%d%m%Y")
         for row in rows: #Iterate every booking
-            db_start_date = datetime.strptime(row[2], "%d%m%Y")
-            db_end_date = datetime.strptime(row[3], "%d%m%Y")
+            db_start_date = datetime.strptime(row[3], "%d%m%Y")
+            db_end_date = datetime.strptime(row[4], "%d%m%Y")
             is_start_date_inbetween = db_start_date <= requested_start_date <= db_end_date
             is_end_date_inbetween = db_start_date <= requested_end_date <= db_end_date
             if (is_start_date_inbetween or is_end_date_inbetween):
-                booked_assets.append(row[1]) #Append assets that are booked during the time window to booked_assets
+                booked_assets.append(row[2]) #Append assets that are booked during the time window to booked_assets
 
         #Append assets that are unbooked
         rows = cur.execute("SELECT asset_name FROM assets").fetchall()

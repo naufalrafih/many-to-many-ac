@@ -17,7 +17,7 @@ asset_ip_address TEXT NOT NULL UNIQUE
 );
 
 CREATE TABLE bookings (
-book_id INTEGER PRIMARY KEY,
+book_id TEXT PRIMARY KEY,
 uid INTEGER NOT NULL,
 asset_name TEXT NOT NULL,
 start_date TEXT NOT NULL, /* #FORMAT: DDMMYYYY */
