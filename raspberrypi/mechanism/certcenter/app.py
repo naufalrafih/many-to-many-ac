@@ -334,30 +334,45 @@ def api_booking_data():
 
                     block = 6
                     auth_error = util.do_auth(block)
-                    (read_error, booking_data) = util.rfid.read(block)
-                    print("Auth Error:",auth_error)
-                    print("Read Error:",read_error)
-                    print("Booking Data:",booking_data)
-                    while (booking_data != [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) and (block <= 66):
-                        block += 4
-                        if (block <= 63):
-                            booking_data = util.read_out(block)
-                            print(booking_data)
+                    if not auth_error:
+                        (read_error, booking_data) = util.rfid.read(block)
+                        if not read_error:
+                            iterate_error = False
+                            while (booking_data != [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) and (block <= 66):
+                                block += 4
+                                if (block <= 63):
+                                    (read_error, booking_data) = util.rfid.read(block)
+                                    if read_error:
+                                        iterate_error = True
+                            
+                            if not iterate_error: 
+                                if (block < 66): 
+                                    error_date = rdr.write((block-2), str_to_intarray(start_date) + str_to_intarray(end_date))
+                                    error_assetname = rdr.write((block-1), str_to_intarray(asset_name))
+                                    error_bookid = rdr.write(block, str_to_intarray(book_id))
 
-                    if (block < 66):
-                        rdr.write((block-2), str_to_intarray(start_date).append(str_to_intarray(end_date)))
-                        rdr.write((block-1), str_to_intarray(asset_name))
-                        rdr.write(block, str_to_intarray(book_id))
+                                    if error_date or error_assetname or error_bookid:
+                                        response_body = "Failed writing booking to card"
+                                        response_code = 500
+                                    else:    
+                                        response_body = "Data written successfully"
+                                        response_code = 200
+                                else: #Sectornya penuh semua dengan booking
+                                    response_body = "Card is full"
+                                    response_code = 500
+                                util.deauth()
 
-                        response_body = "Data written successfully"
-                        response_code = 200
+                                response_body = {"book_id": book_id, "asset_name": asset_name, "start_date": start_date, "end_date": end_date}
+                                response_code = 200
+                            else: #Error while iterating through sectors
+                                response_body = "Failed while reading sectors"
+                                response_code = 500
+                        else:
+                            response_body = "Error while scanning empty sector"
+                            response_code = 500
                     else:
-                        response_body = "Card is full"
-                        response_code = 400
-                    util.deauth()
-
-                    response_body = {"book_id": book_id, "asset_name": asset_name, "start_date": start_date, "end_date": end_date}
-                    response_code = 200
+                        response_body = "Writing to card failed. Unsuccessful card registration?" #Failed to auth: key_ij might be wrong.
+                        response_code = 500
                 else:
                     response_body = "Failed to generate keyij"
                     response_code = 500
@@ -412,10 +427,10 @@ def intarray_to_int(intarray):
 
 # intarray merupakan string yang diubah jadi bytes, kemudian masing2 byte dijadikan integer
 def str_to_intarray(my_str):
-    return [int(byte) for byte in bytes(my_str, "utf-8")]
+    return [int(byte) for byte in bytes(my_str, "ascii")]
 
 def intarray_to_str(intarray):
-    return b''.join([int.to_bytes(x,1,'big') for x in intarray]).decode("utf-8")
+    return b''.join([int.to_bytes(x,1,'big') for x in intarray]).decode("ascii")
 
 if __name__ == "__main__":
     class RFID_timeout(RFID):
