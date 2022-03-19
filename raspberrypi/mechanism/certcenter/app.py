@@ -140,7 +140,7 @@ def register_user_scan():
                     uid_int = intarray_to_int(uid[:-1])
                     keyij, keyij_error = generate_keyij(certcenter_key, uid_int, public_key)
                     if not keyij_error:
-                        keyij_array = int_to_intarray(keyij)
+                        keyij_array = int_to_intarray(keyij,6)
                         print(f"Key ij: {keyij}")
 
                         for i in range(16):
@@ -325,7 +325,7 @@ def api_booking_data():
 
                 keyij, keyij_error = generate_keyij(certcenter_key, uid_int, public_key)
                 if not keyij_error:
-                    keyij_array = int_to_intarray(keyij)
+                    keyij_array = int_to_intarray(keyij,6)
                     print(f"Key ij: {keyij}")
 
                     util.set_tag(uid)
@@ -341,15 +341,19 @@ def api_booking_data():
                             while (booking_data != [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]) and (block <= 66):
                                 block += 4
                                 if (block <= 63):
+                                    auth_error = util.do_auth(block)
                                     (read_error, booking_data) = util.rfid.read(block)
-                                    if read_error:
+                                    if auth_error or read_error:
                                         iterate_error = True
                             
                             if not iterate_error: 
-                                if (block < 66): 
-                                    error_date = rdr.write((block-2), str_to_intarray(start_date) + str_to_intarray(end_date))
-                                    error_assetname = rdr.write((block-1), str_to_intarray(asset_name))
-                                    error_bookid = rdr.write(block, str_to_intarray(book_id))
+                                if (block < 66):
+                                    data_block_0 = str_to_intarray(start_date) + str_to_intarray(end_date)
+                                    data_block_1 = str_to_intarray(asset_name) + [0 for i in range(16 - len(str_to_intarray(asset_name)))]
+                                    data_block_2 = hex_to_intarray(book_id)
+                                    error_date = rdr.write((block-2), data_block_0)
+                                    error_assetname = rdr.write((block-1), data_block_1)
+                                    error_bookid = rdr.write(block, data_block_2)
 
                                     if error_date or error_assetname or error_bookid:
                                         response_body = "Failed writing booking to card"
@@ -419,8 +423,8 @@ def generate_keyij(key, id, c):
         return 0, True
 
 # intarray merupakan integer yang diubah jadi bytes secara big endian, kemudian masing2 byte dijadikan integer
-def int_to_intarray(my_int):
-    return [int(key_byte) for key_byte in int.to_bytes(my_int,6,'big')]
+def int_to_intarray(my_int, length):
+    return [int(key_byte) for key_byte in int.to_bytes(my_int,length,'big')]
 
 def intarray_to_int(intarray):
     return int.from_bytes(b''.join([int.to_bytes(x,1,'big') for x in intarray]),'big')
@@ -431,6 +435,12 @@ def str_to_intarray(my_str):
 
 def intarray_to_str(intarray):
     return b''.join([int.to_bytes(x,1,'big') for x in intarray]).decode("ascii")
+
+def hex_to_intarray(hex):
+    length = hex_int/2
+    hex_int = int.from_bytes(bytes.fromhex(hex),'big')
+    intarray = int_to_intarray(hex_int,length)
+    return intarray
 
 if __name__ == "__main__":
     class RFID_timeout(RFID):
