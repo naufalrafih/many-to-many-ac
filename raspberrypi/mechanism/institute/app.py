@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request #type: ignore
 import requests
 import sqlite3
 import uuid

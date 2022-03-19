@@ -147,7 +147,7 @@ def register_user_scan():
                                                 access_bits, 0x00, (keyij_array[0], keyij_array[1], keyij_array[2], keyij_array[3], keyij_array[4], keyij_array[5]))
                         util.deauth()
 
-                        uid_int = intarray_to_int(uid)
+                        uid_int = intarray_to_int(uid[:-1])
                         response_body = {"uid": uid_int}
                         response_code = 200
                     else:
@@ -226,7 +226,7 @@ def booking_scan():
             if not error:
                 util.set_tag(uid)
                 print("Card read UID: "+str(uid[0])+","+str(uid[1])+","+str(uid[2])+","+str(uid[3]))
-                uid_int = intarray_to_int(uid)
+                uid_int = intarray_to_int(uid[:-1])
                 response_body = {"uid": uid_int}
                 response_code = 200
             else:
