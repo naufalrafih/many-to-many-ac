@@ -327,6 +327,7 @@ def api_booking_data():
                 if not keyij_error:
                     keyij_array = int_to_intarray(keyij,6)
                     print(f"Key ij: {keyij}")
+                    print(f"Key ij array: {keyij_array}")
 
                     util.set_tag(uid)
                     util.auth(rdr.auth_b, keyij_array)
@@ -345,8 +346,8 @@ def api_booking_data():
                                     (read_error, booking_data) = util.rfid.read(block)
                                     if auth_error or read_error:
                                         iterate_error = True
-                            
-                            if not iterate_error: 
+
+                            if not iterate_error:
                                 if (block < 66):
                                     data_block_0 = str_to_intarray(start_date) + str_to_intarray(end_date)
                                     data_block_1 = str_to_intarray(asset_name) + [0 for i in range(16 - len(str_to_intarray(asset_name)))]
@@ -358,7 +359,7 @@ def api_booking_data():
                                     if error_date or error_assetname or error_bookid:
                                         response_body = "Failed writing booking to card"
                                         response_code = 500
-                                    else:    
+                                    else:
                                         response_body = "Data written successfully"
                                         response_code = 200
                                 else: #Sectornya penuh semua dengan booking
@@ -437,7 +438,7 @@ def intarray_to_str(intarray):
     return b''.join([int.to_bytes(x,1,'big') for x in intarray]).decode("ascii")
 
 def hex_to_intarray(hex):
-    length = hex_int/2
+    length = int(len(hex)/2)
     hex_int = int.from_bytes(bytes.fromhex(hex),'big')
     intarray = int_to_intarray(hex_int,length)
     return intarray
