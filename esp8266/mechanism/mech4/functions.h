@@ -55,6 +55,7 @@ int request(const char *method, const char *path, JsonDocument& doc_request, Jso
             // file found at server
             if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
                 String payload = https.getString();
+                Serial.println(payload);
                 DeserializationError error = deserializeJson(doc_response, payload);
                 if (error) {
                     Serial.print(F("deserializeJson() failed: "));
@@ -70,7 +71,7 @@ int request(const char *method, const char *path, JsonDocument& doc_request, Jso
     }
 }
 
-void register_asset(char **institute_key, String asset_name) {
+void register_asset(unsigned long long * institute_key, String asset_name) {
     
     //Request body
     StaticJsonDocument<48> doc_request;
@@ -85,14 +86,12 @@ void register_asset(char **institute_key, String asset_name) {
         Serial.println("Success registering and getting institute_key.");
     } else {
         Serial.println("Unsuccessful registering.");
-        const char * temp = "FAILED";
-        *institute_key = strdup(temp);
+        *institute_key = -999;
         return;
     }
 
     //Extract variable from response
-    const char * temp = doc_response["institute_key"];
-    *institute_key = strdup(temp);
-    Serial.printf("institute_key: %s\n", *institute_key);
+    JsonVariant response = doc_response["institute_key"];;
+    *institute_key = response.as<unsigned long long>();
     return;
 }

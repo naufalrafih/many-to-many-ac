@@ -1,23 +1,34 @@
 #include <Arduino.h>
+#define ARDUINOJSON_USE_LONG_LONG 1
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
+#include <SPI.h>
+#include <MFRC522.h>
 
-const char* ssid     = "mywifi";
+//Wiring: https://www.instructables.com/MFRC522-RFID-Reader-Interfaced-With-NodeMCU/
+#define RST_PIN         5           // Configurable, see typical pin layout above
+#define SS_PIN          4          // Configurable, see typical pin layout above
+
+MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance
+
+const char* ssid     = "Ceskuu";
 const char* password = "543216789";
-const char* hostserver = "192.168.137.1";
+const char* hostserver = "10.42.0.154";
 //IPAddress hostserver(192, 168, 137, 1);
 uint16_t hostport = 35754;
 
 static const char fp[] PROGMEM = "ED:3F:4A:CC:DB:DB:57:A5:C8:39:AE:65:D7:59:33:94:0E:1D:56:E0";
 #include "functions.h"
 
-char * institute_key;
+unsigned long long institute_key;
 String asset_name = "rock";
 
 void setup() {
     Serial.begin(115200);
+    SPI.begin();
+    mfrc522.PCD_Init();
     delay(10);
 
     WiFi.mode(WIFI_STA);
@@ -37,17 +48,21 @@ void setup() {
     Serial.println(WiFi.localIP());         // Send the IP address of the ESP8266 to the computer
 
     register_asset(&institute_key, asset_name);
-    while ((String) institute_key == "FAILED") {
-        delay(1000);
-        Serial.println("Try getting key A again...");
+    while (institute_key == -999) {
+        delay(1000);-
+        Serial.println("Try registering and getting institute_key again...");
         register_asset(&institute_key, asset_name);
     }
 }
 
 void loop() {
-    if (Serial.available() > 0) {
-        int c = Serial.read();
-        Serial.println("Pressed.");
-        Serial.print("Institute_Key: "); Serial.println(institute_key);
+    Serial.println("Starting loop");
+    Serial.printf("institute_key: %llu\n",institute_key);
+    delay(1000);
+    //Detect card. If no card is detected, reset loop.
+    if ( ! mfrc522.PICC_IsNewCardPresent()) {
+        return;
     }
+    Serial.println("New card present.");
+    delay(1000);
 }
