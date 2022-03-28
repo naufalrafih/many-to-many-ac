@@ -200,3 +200,25 @@ access_permit parse_sector_data(sector_data sector_data) {
 
     return res;
 }
+
+typedef struct {
+    bool contains_permit[16]; //true if corresponding sector is successfully authed & read, false otherwise
+    access_permit access_permits[16]; //contains the permits.
+} card_contents; //Will be populated when iterating through all sectors.
+
+card_contents iterate_sectors(MFRC522::MIFARE_Key sector_key) {
+    card_contents card_contents;
+
+    for (int sector = 0; sector < 16; sector++) {
+        access_permit access_permit = parse_sector_data(read_sector(sector, sector_key));
+        if (access_permit.book_id[0] == 0xFF && access_permit.book_id[1] == 0xFF && access_permit.book_id[2] == 0xFF) { //sector doesn't contain permit
+            card_contents.contains_permit[sector] = false;
+            card_contents.access_permits[sector] = access_permit;
+        } else { //contains permit
+            card_contents.contains_permit[sector] = true;
+            card_contents.access_permits[sector] = access_permit;
+        }
+    }
+
+    return card_contents;
+}
