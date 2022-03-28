@@ -6,6 +6,7 @@
 #include <WiFiClient.h>
 #include <SPI.h>
 #include <MFRC522.h>
+#include <gmp-ino.h>
 
 //Wiring: https://www.instructables.com/MFRC522-RFID-Reader-Interfaced-With-NodeMCU/
 #define RST_PIN         5           // Configurable, see typical pin layout above
@@ -24,6 +25,8 @@ static const char fp[] PROGMEM = "ED:3F:4A:CC:DB:DB:57:A5:C8:39:AE:65:D7:59:33:9
 
 unsigned long long institute_key;
 String asset_name = "rock";
+unsigned long long public_key = 231587109249421;
+unsigned long long uid = 3642882455;
 
 void setup() {
     Serial.begin(115200);
@@ -62,7 +65,10 @@ void loop() {
     //Detect card. If no card is detected, reset loop.
     if ( ! mfrc522.PICC_IsNewCardPresent()) {
         return;
-    }
-    Serial.println("New card present.");
+    }    
+
+    unsigned long long key_ij = calculate_key(institute_key, uid, public_key);
+    
+    Serial.printf("Key_IJ: %llu\n",key_ij);    
     delay(1000);
 }

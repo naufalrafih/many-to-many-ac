@@ -95,3 +95,30 @@ void register_asset(unsigned long long * institute_key, String asset_name) {
     *institute_key = response.as<unsigned long long>();
     return;
 }
+
+unsigned long long mpz2ull(mpz_t z) {
+    unsigned long long result = 0;
+    mpz_export(&result, 0, -1, sizeof result, 0, 0, z);
+    return result;
+}
+
+void ull2mpz(mpz_t z, unsigned long long ull) {
+    mpz_import(z, 1, -1, sizeof ull, 0, 0, &ull);
+}
+
+unsigned long long calculate_key(unsigned long long institute_key, unsigned long long uid, unsigned long long public_key) {
+    mpz_t i, p, u, r;
+    mpz_init(i);
+    mpz_init(p);
+    mpz_init(u);
+    mpz_init(r);
+
+    ull2mpz(i, institute_key);
+    ull2mpz(u, uid);
+    ull2mpz(p, public_key);
+
+    mpz_powm(r, i, u, p);
+
+    unsigned long long result = mpz2ull(r);
+    return result;
+}
