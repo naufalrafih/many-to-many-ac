@@ -72,7 +72,7 @@ int request(const char *method, const char *path, JsonDocument& doc_request, Jso
 }
 
 void register_asset(unsigned long long * institute_key, String asset_name) {
-    
+
     //Request body
     StaticJsonDocument<48> doc_request;
     doc_request["asset_name"] = asset_name;
@@ -120,30 +120,30 @@ MFRC522::MIFARE_Key calculate_key(unsigned long long institute_key, unsigned lon
     mpz_powm(r, i, u, p);
 
     unsigned long long sector_key_int = mpz2ull(r);
-    
+
     MFRC522::MIFARE_Key key;
     for (byte i = 0; i < 6; i++) {
-        key.keyByte[i] = 0xFF & (sector_key_int >> (40-i*8));
+        key.keyByte[i] = 0xFF & (sector_key_int >> (40 - i * 8));
     }
     return key;
 }
 
 typedef struct {
-    byte data[4][16];
+    byte data[3][16];
 } sector_data;
 
 
 sector_data read_sector(int sector_number, MFRC522::MIFARE_Key sector_key) {
     MFRC522::StatusCode status;
-    byte blocks[4];
-    for (int i = 0; i < 4; i++) blocks[i] = sector_number*4 + i;
+    byte blocks[3];
+    for (int i = 0; i < 3; i++) blocks[i] = sector_number * 4 + i;
     sector_data sector_data;
 
     status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, blocks[0], &sector_key, &(mfrc522.uid));
     if (status != MFRC522::STATUS_OK) {
         Serial.print(F("Authentication failed: "));
         Serial.println(mfrc522.GetStatusCodeName(status));
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 16; j++) {
                 sector_data.data[i][j] = 0xFF;
             }
@@ -151,7 +151,7 @@ sector_data read_sector(int sector_number, MFRC522::MIFARE_Key sector_key) {
         return sector_data;
     }
 
-    for (int i = 0; i < 4; i++) { //Iterate through blocks in the sector
+    for (int i = 0; i < 3; i++) { //Iterate through blocks in the sector
         byte buffer_block[16];
         byte len = 16;
 
@@ -160,8 +160,8 @@ sector_data read_sector(int sector_number, MFRC522::MIFARE_Key sector_key) {
         if (status != MFRC522::STATUS_OK) {
             Serial.print(F("Reading failed: "));
             Serial.println(mfrc522.GetStatusCodeName(status));
-              
-            for (int i = 0; i < 4; i++) {
+
+            for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 16; j++) {
                     sector_data.data[i][j] = 0xFF;
                 }
@@ -176,4 +176,27 @@ sector_data read_sector(int sector_number, MFRC522::MIFARE_Key sector_key) {
     }
 
     return sector_data;
+}
+
+typedef struct {
+    byte book_id[16];
+    byte asset_name[16];
+    byte start_date[8];
+    byte end_date[8];
+} access_permit;
+
+access_permit parse_sector_data(sector_data sector_data) {
+    access_permit res;
+
+    for (int i = 0; i < 16; i++) {
+        res.book_id[i] = sector_data[2][i]; //book_id is in block 2
+        res.asset_name[i] = sector_data[1][i]; //asset_name is in block 1
+    }
+
+    for (int i = 0; i < 8; i++) {
+        res.start_date[i] = sector_data[0][i]; //start_date is in block 0, byte 0-7
+        res.end_date[i] = sector_data[0][i + 8]; //end_date is in block 0, byte 8-15
+    }
+
+    return res;
 }
