@@ -60,7 +60,6 @@ void setup() {
 
 void loop() {
 
-    MFRC522::StatusCode status;
     MFRC522::MIFARE_Key sector_key;
 
     Serial.println("Starting loop");
