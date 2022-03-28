@@ -59,6 +59,10 @@ void setup() {
 }
 
 void loop() {
+
+    MFRC522::StatusCode status;
+    MFRC522::MIFARE_Key sector_key;
+
     Serial.println("Starting loop");
     Serial.printf("institute_key: %llu\n",institute_key);
     delay(1000);
@@ -67,8 +71,9 @@ void loop() {
         return;
     }    
 
-    unsigned long long key_ij = calculate_key(institute_key, uid, public_key);
-    
-    Serial.printf("Key_IJ: %llu\n",key_ij);    
+    sector_key = calculate_key(institute_key, uid, public_key);
+    for (byte i = 0; i < 6; i++) {
+        Serial.printf("sector_key[%d] = %d\n",i,sector_key.keyByte[i]);
+    }
     delay(1000);
 }

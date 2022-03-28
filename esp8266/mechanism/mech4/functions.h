@@ -106,7 +106,7 @@ void ull2mpz(mpz_t z, unsigned long long ull) {
     mpz_import(z, 1, -1, sizeof ull, 0, 0, &ull);
 }
 
-unsigned long long calculate_key(unsigned long long institute_key, unsigned long long uid, unsigned long long public_key) {
+MFRC522::MIFARE_Key calculate_key(unsigned long long institute_key, unsigned long long uid, unsigned long long public_key) {
     mpz_t i, p, u, r;
     mpz_init(i);
     mpz_init(p);
@@ -119,6 +119,11 @@ unsigned long long calculate_key(unsigned long long institute_key, unsigned long
 
     mpz_powm(r, i, u, p);
 
-    unsigned long long result = mpz2ull(r);
-    return result;
+    unsigned long long sector_key_int = mpz2ull(r);
+    
+    MFRC522::MIFARE_Key key;
+    for (byte i = 0; i < 6; i++) {
+        key.keyByte[i] = 0xFF & (sector_key_int >> (40-i*8));
+    }
+    return key;
 }
