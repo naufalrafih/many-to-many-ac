@@ -164,8 +164,8 @@ sector_data read_sector(int sector_number, MFRC522::MIFARE_Key sector_key) {
     }
 
     for (int i = 0; i < 3; i++) { //Iterate through blocks in the sector
-        byte buffer_block[16];
-        byte len = 16;
+        byte buffer_block[18];
+        byte len = 18;
 
         //Read data from block
         status = mfrc522.MIFARE_Read(blocks[i], buffer_block, &len);
