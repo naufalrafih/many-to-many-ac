@@ -101,7 +101,8 @@ unsigned long long bytearray_to_int(byte bytearray[], int len) {
     for (int i = 0; i < len; i++) {
         res |= bytearray[i] << (len-i-1)*8;
     }
-    res = res & ( (1 << 8*len) - 1);
+    res = res << (64-len*8);
+    res = res >> (64-len*8);
     return res;
 }
 

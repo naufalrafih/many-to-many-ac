@@ -76,6 +76,7 @@ void loop() {
 
     sector_key = calculate_key(institute_key, uid, public_key);
     for (byte i = 0; i < 6; i++) {
+        sector_key.keyByte[i] = 0xFF;
         Serial.printf("sector_key[%d] = %d\n", i, sector_key.keyByte[i]);
     }
 
