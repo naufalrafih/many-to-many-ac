@@ -189,13 +189,13 @@ access_permit parse_sector_data(sector_data sector_data) {
     access_permit res;
 
     for (int i = 0; i < 16; i++) {
-        res.book_id[i] = sector_data[2][i]; //book_id is in block 2
-        res.asset_name[i] = sector_data[1][i]; //asset_name is in block 1
+        res.book_id[i] = sector_data.data[2][i]; //book_id is in block 2
+        res.asset_name[i] = sector_data.data[1][i]; //asset_name is in block 1
     }
 
     for (int i = 0; i < 8; i++) {
-        res.start_date[i] = sector_data[0][i]; //start_date is in block 0, byte 0-7
-        res.end_date[i] = sector_data[0][i + 8]; //end_date is in block 0, byte 8-15
+        res.start_date[i] = sector_data.data[0][i]; //start_date is in block 0, byte 0-7
+        res.end_date[i] = sector_data.data[0][i + 8]; //end_date is in block 0, byte 8-15
     }
 
     return res;
@@ -221,4 +221,30 @@ card_contents iterate_sectors(MFRC522::MIFARE_Key sector_key) {
     }
 
     return card_contents;
+}
+
+StaticJsonDocument<3072> verify_request_body(card_contents card_contents) {
+    StaticJsonDocument<3072> res;
+    byte uid[4];
+    for (int i = 0; i < 4; i++) {
+        uid[i] = mfrc522.uid.uidByte[i]; 
+    }
+    res["uid"] = uid;
+    JsonArray access_permits_arr = res.createNestedArray("access_permits");
+    for (int i = 0; i < 16; i++) {
+        if (card_contents.contains_permit[i]) {
+            JsonObject access_permit_obj = access_permits_arr.createNestedObject();
+            access_permit_obj["sector"] = i;
+            JsonObject access_permit_detail = access_permit_obj.createNestedObject("access_permit");
+            access_permit_detail["book_id"] = card_contents.access_permits[i].book_id;
+            access_permit_detail["asset_name"] = card_contents.access_permits[i].asset_name;
+            access_permit_detail["start_date"] = card_contents.access_permits[i].start_date;
+            access_permit_detail["end_date"] = card_contents.access_permits[i].end_date;
+        }
+    }
+    String request_body;
+    serializeJson(res, request_body);
+    Serial.println("Serialize request body result:");
+    Serial.println(request_body);
+    return res;
 }

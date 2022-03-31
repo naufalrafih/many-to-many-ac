@@ -74,5 +74,7 @@ void loop() {
     for (byte i = 0; i < 6; i++) {
         Serial.printf("sector_key[%d] = %d\n",i,sector_key.keyByte[i]);
     }
-    delay(1000);
+
+    card_contents card_contents = iterate_sectors(sector_key);
+    StaticJsonDocument<3072> JsonBody = verify_request_body(card_contents);
 }
