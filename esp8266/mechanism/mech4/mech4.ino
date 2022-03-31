@@ -82,5 +82,6 @@ void loop() {
 
     card_contents card_contents = iterate_sectors(sector_key);
     DynamicJsonDocument JsonBody = verify_request_body(card_contents);
+    mfrc522.PCD_StopCrypto1();
     return;
 }
