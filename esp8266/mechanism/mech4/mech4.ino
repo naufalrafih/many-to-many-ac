@@ -14,9 +14,9 @@
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance
 
-const char* ssid     = "Ceskuu";
+const char* ssid     = "mywifi";
 const char* password = "543216789";
-const char* hostserver = "10.42.0.154";
+const char* hostserver = "192.168.137.1";
 //IPAddress hostserver(192, 168, 137, 1);
 uint16_t hostport = 35754;
 
@@ -41,7 +41,7 @@ void setup() {
 
     int i = 0;
     while (WiFi.status() != WL_CONNECTED) {
-        delay(1000);
+        delay(500);
         Serial.print(++i); Serial.print(' ');
     }
 
@@ -52,7 +52,7 @@ void setup() {
 
     register_asset(&institute_key, asset_name);
     while (institute_key == -999) {
-        delay(1000);-
+        delay(500); -
         Serial.println("Try registering and getting institute_key again...");
         register_asset(&institute_key, asset_name);
     }
@@ -63,18 +63,23 @@ void loop() {
     MFRC522::MIFARE_Key sector_key;
 
     Serial.println("Starting loop");
-    Serial.printf("institute_key: %llu\n",institute_key);
-    delay(1000);
+    Serial.printf("institute_key: %llu\n", institute_key);
     //Detect card. If no card is detected, reset loop.
     if ( ! mfrc522.PICC_IsNewCardPresent()) {
         return;
-    }    
+    }
+
+    // Select one of the cards
+    if ( ! mfrc522.PICC_ReadCardSerial()) {
+        return;
+    }
 
     sector_key = calculate_key(institute_key, uid, public_key);
     for (byte i = 0; i < 6; i++) {
-        Serial.printf("sector_key[%d] = %d\n",i,sector_key.keyByte[i]);
+        Serial.printf("sector_key[%d] = %d\n", i, sector_key.keyByte[i]);
     }
 
     card_contents card_contents = iterate_sectors(sector_key);
-    StaticJsonDocument<3072> JsonBody = verify_request_body(card_contents);
+    DynamicJsonDocument JsonBody = verify_request_body(card_contents);
+    return;
 }

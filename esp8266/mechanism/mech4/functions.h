@@ -5,7 +5,7 @@ void setNTP() {
     time_t now = time(nullptr);
 
     while (now < 8 * 3600 * 2) {
-        delay(500);
+        delay(100);
         Serial.print(".");
         now = time(nullptr);
     }
@@ -96,6 +96,15 @@ void register_asset(unsigned long long * institute_key, String asset_name) {
     return;
 }
 
+unsigned long long bytearray_to_int(byte bytearray[], int len) {
+    unsigned long long res = 0;
+    for (int i = 0; i < len; i++) {
+        res |= bytearray[i] << (len-i-1)*8;
+    }
+    res = res & ( (1 << 8*len) - 1);
+    return res;
+}
+
 unsigned long long mpz2ull(mpz_t z) {
     unsigned long long result = 0;
     mpz_export(&result, 0, -1, sizeof result, 0, 0, z);
@@ -107,6 +116,7 @@ void ull2mpz(mpz_t z, unsigned long long ull) {
 }
 
 MFRC522::MIFARE_Key calculate_key(unsigned long long institute_key, unsigned long long uid, unsigned long long public_key) {
+    Serial.println("calculate_key() called");
     mpz_t i, p, u, r;
     mpz_init(i);
     mpz_init(p);
@@ -134,6 +144,7 @@ typedef struct {
 
 
 sector_data read_sector(int sector_number, MFRC522::MIFARE_Key sector_key) {
+    Serial.println("read_sector() called");
     MFRC522::StatusCode status;
     byte blocks[3];
     for (int i = 0; i < 3; i++) blocks[i] = sector_number * 4 + i;
@@ -186,6 +197,7 @@ typedef struct {
 } access_permit;
 
 access_permit parse_sector_data(sector_data sector_data) {
+    Serial.println("parse_sector_data() called");
     access_permit res;
 
     for (int i = 0; i < 16; i++) {
@@ -207,9 +219,11 @@ typedef struct {
 } card_contents; //Will be populated when iterating through all sectors.
 
 card_contents iterate_sectors(MFRC522::MIFARE_Key sector_key) {
+    Serial.println("iterate_sectors() called");
     card_contents card_contents;
 
     for (int sector = 0; sector < 16; sector++) {
+        delay(100);
         access_permit access_permit = parse_sector_data(read_sector(sector, sector_key));
         if (access_permit.book_id[0] == 0xFF && access_permit.book_id[1] == 0xFF && access_permit.book_id[2] == 0xFF) { //sector doesn't contain permit
             card_contents.contains_permit[sector] = false;
@@ -223,23 +237,27 @@ card_contents iterate_sectors(MFRC522::MIFARE_Key sector_key) {
     return card_contents;
 }
 
-StaticJsonDocument<3072> verify_request_body(card_contents card_contents) {
-    StaticJsonDocument<3072> res;
+DynamicJsonDocument verify_request_body(card_contents card_contents) {
+    Serial.println("verify_request_body() called");
+    delay(100);
+    DynamicJsonDocument res(3072);
     byte uid[4];
     for (int i = 0; i < 4; i++) {
         uid[i] = mfrc522.uid.uidByte[i]; 
     }
-    res["uid"] = uid;
+    res["uid"] = bytearray_to_int(uid,4);
     JsonArray access_permits_arr = res.createNestedArray("access_permits");
     for (int i = 0; i < 16; i++) {
+        delay(100);
         if (card_contents.contains_permit[i]) {
+            Serial.printf("Sector %d contains permit\n",i);
             JsonObject access_permit_obj = access_permits_arr.createNestedObject();
             access_permit_obj["sector"] = i;
             JsonObject access_permit_detail = access_permit_obj.createNestedObject("access_permit");
-            access_permit_detail["book_id"] = card_contents.access_permits[i].book_id;
-            access_permit_detail["asset_name"] = card_contents.access_permits[i].asset_name;
-            access_permit_detail["start_date"] = card_contents.access_permits[i].start_date;
-            access_permit_detail["end_date"] = card_contents.access_permits[i].end_date;
+            access_permit_detail["book_id"] = bytearray_to_int(card_contents.access_permits[i].book_id,16);
+            access_permit_detail["asset_name"] = bytearray_to_int(card_contents.access_permits[i].asset_name,16);
+            access_permit_detail["start_date"] = bytearray_to_int(card_contents.access_permits[i].start_date,8);
+            access_permit_detail["end_date"] = bytearray_to_int(card_contents.access_permits[i].end_date,8);
         }
     }
     String request_body;
