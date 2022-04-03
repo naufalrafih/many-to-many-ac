@@ -38,12 +38,16 @@ int request(const char *method, const char *path, JsonDocument& doc_request, Jso
 
         String request_body;
         serializeJson(doc_request, request_body);
-
+        Serial.println("Attempting HTTPS request. Request body:");
+        Serial.println(request_body);
         https.addHeader("Content-Type", "application/json");
         int httpCode;
+        yield();
         if (method == "GET") {
+            delay(100);
             httpCode = https.GET();
         } else if (method == "POST") {
+            delay(100);
             httpCode = https.POST(request_body);
         }
 
@@ -71,14 +75,14 @@ int request(const char *method, const char *path, JsonDocument& doc_request, Jso
     }
 }
 
-void register_asset(unsigned long long * institute_key, String asset_name) {
+void register_asset(unsigned long long * institute_key, unsigned long long * public_key, String asset_name) {
 
     //Request body
-    StaticJsonDocument<48> doc_request;
+    StaticJsonDocument<100> doc_request;
     doc_request["asset_name"] = asset_name;
 
     //Response body
-    StaticJsonDocument<48> doc_response;
+    StaticJsonDocument<100> doc_response;
 
     //Request
     int response_code = request("POST", "/api/register/asset", doc_request, doc_response);
@@ -91,8 +95,11 @@ void register_asset(unsigned long long * institute_key, String asset_name) {
     }
 
     //Extract variable from response
-    JsonVariant response = doc_response["institute_key"];;
-    *institute_key = response.as<unsigned long long>();
+    JsonVariant response1 = doc_response["institute_key"];;
+    *institute_key = response1.as<unsigned long long>();
+
+    JsonVariant response2 = doc_response["public_key"];;
+    *public_key = response2.as<unsigned long long>();
     return;
 }
 
@@ -158,30 +165,28 @@ sector_data read_sector(int sector_number, MFRC522::MIFARE_Key sector_key) {
                 sector_data.data[i][j] = 0xFF;
             }
         }
-        return sector_data;
-    }
+    } else {
+        for (int i = 0; i < 3; i++) { //Iterate through blocks in the sector
+            byte buffer_block[18];
+            byte len = 18;
 
-    for (int i = 0; i < 3; i++) { //Iterate through blocks in the sector
-        byte buffer_block[18];
-        byte len = 18;
+            //Read data from block
+            status = mfrc522.MIFARE_Read(blocks[i], buffer_block, &len);
+            if (status != MFRC522::STATUS_OK) {
+                Serial.print(F("Reading failed: "));
+                Serial.println(mfrc522.GetStatusCodeName(status));
 
-        //Read data from block
-        status = mfrc522.MIFARE_Read(blocks[i], buffer_block, &len);
-        if (status != MFRC522::STATUS_OK) {
-            Serial.print(F("Reading failed: "));
-            Serial.println(mfrc522.GetStatusCodeName(status));
-
-            for (int i = 0; i < 3; i++) {
+                for (int i = 0; i < 3; i++) {
+                    for (int j = 0; j < 16; j++) {
+                        sector_data.data[i][j] = 0xFF;
+                    }
+                }
+            } else {
+                //Move data from buffer to sector_data for corresponding block
                 for (int j = 0; j < 16; j++) {
-                    sector_data.data[i][j] = 0xFF;
+                    sector_data.data[i][j] = buffer_block[j];
                 }
             }
-            return sector_data;
-        }
-
-        //Move data from buffer to sector_data for corresponding block
-        for (int j = 0; j < 16; j++) {
-            sector_data.data[i][j] = buffer_block[j];
         }
     }
 
