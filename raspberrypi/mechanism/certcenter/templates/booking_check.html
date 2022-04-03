@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register User</title>
+</head>
+<body>
+    <h1>Check Booking</h1>
+    <div id="register-div">
+        <button id="initialize-register" onclick="initializeCheck()">Click to check bookings in a card</button> 
+    </div>
+
+    <script>
+        //Function call order:
+        // 1. initializeCheck()
+        // 2. scanCard()
+
+        var register_div = document.getElementById("register-div")
+        var bookings = {}
+
+        function initializeCheck() {
+            register_div.innerHTML = "Please scan card within 10 seconds. <br> <p>Timeout: <span id='timer'></span> seconds</p>"
+            scanCard()
+        }
+
+        function scanCard() {
+            var timer_span = document.getElementById('timer')
+            var url = window.location.protocol + "//" + window.location.host + "/api/booking/check"
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", url, true);
+            xmlHttp.onreadystatechange = function () {
+                if (xmlHttp.readyState == 4) {
+                    if (xmlHttp.status == 200) {
+                        clearInterval(timer_interval)
+                        bookings = JSON.parse(xmlHttp.responseText)
+                        register_div.innerHTML = "Bookings data: " + bookings
+                    } else {
+                        clearInterval(timer_interval)
+                        register_div.innerHTML = "Request unsuccessful. Please reload page."
+                    }
+                }
+            }
+            xmlHttp.send()
+            
+            //Displaying timeout
+            timer_span.innerHTML = 10
+            const timer_interval = setInterval(() => {
+                if (timer_span.innerHTML == 0) {
+                    window.clearInterval(timer_interval)
+                    register_div.innerHTML = "Timed out. Please reload page."
+                } else {
+                    timer_span.innerHTML -= 1
+                }
+            }, 1000)
+        }
+
+    </script>
+</body>
+</html>
