@@ -96,14 +96,12 @@ void register_asset(unsigned long long * institute_key, String asset_name) {
     return;
 }
 
-unsigned long long bytearray_to_int(byte bytearray[], int len) {
-    unsigned long long res = 0;
+String bytearray_to_hex(byte bytearray[], int len) {
+    String hex = "";
     for (int i = 0; i < len; i++) {
-        res |= bytearray[i] << (len-i-1)*8;
+        hex += String(bytearray[i], HEX);
     }
-    res = res << (64-len*8);
-    res = res >> (64-len*8);
-    return res;
+    return hex;
 }
 
 unsigned long long mpz2ull(mpz_t z) {
@@ -206,6 +204,11 @@ access_permit parse_sector_data(sector_data sector_data) {
         res.asset_name[i] = sector_data.data[1][i]; //asset_name is in block 1
     }
 
+    Serial.println("Asset name intarray:");
+    for (int i = 0; i < 16; i++) {
+        Serial.printf("%d\n", sector_data.data[1][i]);
+    }
+
     for (int i = 0; i < 8; i++) {
         res.start_date[i] = sector_data.data[0][i]; //start_date is in block 0, byte 0-7
         res.end_date[i] = sector_data.data[0][i + 8]; //end_date is in block 0, byte 8-15
@@ -244,21 +247,21 @@ DynamicJsonDocument verify_request_body(card_contents card_contents) {
     DynamicJsonDocument res(3072);
     byte uid[4];
     for (int i = 0; i < 4; i++) {
-        uid[i] = mfrc522.uid.uidByte[i]; 
+        uid[i] = mfrc522.uid.uidByte[i];
     }
-    res["uid"] = bytearray_to_int(uid,4);
+    res["uid"] = bytearray_to_hex(uid, 4);
     JsonArray access_permits_arr = res.createNestedArray("access_permits");
     for (int i = 0; i < 16; i++) {
         delay(100);
         if (card_contents.contains_permit[i]) {
-            Serial.printf("Sector %d contains permit\n",i);
+            Serial.printf("Sector %d contains permit\n", i);
             JsonObject access_permit_obj = access_permits_arr.createNestedObject();
             access_permit_obj["sector"] = i;
             JsonObject access_permit_detail = access_permit_obj.createNestedObject("access_permit");
-            access_permit_detail["book_id"] = bytearray_to_int(card_contents.access_permits[i].book_id,16);
-            access_permit_detail["asset_name"] = bytearray_to_int(card_contents.access_permits[i].asset_name,16);
-            access_permit_detail["start_date"] = bytearray_to_int(card_contents.access_permits[i].start_date,8);
-            access_permit_detail["end_date"] = bytearray_to_int(card_contents.access_permits[i].end_date,8);
+            access_permit_detail["book_id"] = bytearray_to_hex(card_contents.access_permits[i].book_id, 16);
+            access_permit_detail["asset_name"] = bytearray_to_hex(card_contents.access_permits[i].asset_name, 16);
+            access_permit_detail["start_date"] = bytearray_to_hex(card_contents.access_permits[i].start_date, 8);
+            access_permit_detail["end_date"] = bytearray_to_hex(card_contents.access_permits[i].end_date, 8);
         }
     }
     String request_body;
@@ -266,4 +269,39 @@ DynamicJsonDocument verify_request_body(card_contents card_contents) {
     Serial.println("Serialize request body result:");
     Serial.println(request_body);
     return res;
+}
+
+bool determine_action(DynamicJsonDocument jsonBody) {
+
+    //Response body
+    StaticJsonDocument<48> doc_response;
+
+    //Request
+    int response_code = request("POST", "/api/booking/verify", jsonBody, doc_response);
+    if (response_code == 200) {
+        Serial.println("Success contacting server to determine action.");
+    } else {
+        Serial.println("Unsuccessful contacting server to determine action.");
+        return false;
+    }
+
+    //Extract variable from response
+    JsonVariant response = doc_response["permitted"];
+    return response.as<bool>();
+}
+
+void actuate_access(bool isPermitted) {
+    if (isPermitted) {
+        Serial.println("Permitted.");
+        if (thingState == 0) {
+            Serial.println("Changing state to HIGH");
+            thingState = 1;
+        } else {
+            Serial.println("Changing state to LOW");
+            thingState = 0;
+        }
+        digitalWrite(thingPin, thingState);
+    } else {
+        Serial.println("Not permitted!");
+    }
 }
