@@ -149,12 +149,13 @@ typedef struct {
 } sector_data;
 
 
-sector_data read_sector(int sector_number, MFRC522::MIFARE_Key sector_key) {
+bool read_sector(sector_data * sector_data, int sector_number, MFRC522::MIFARE_Key sector_key) {
     Serial.println("read_sector() called");
     MFRC522::StatusCode status;
     byte blocks[3];
     for (int i = 0; i < 3; i++) blocks[i] = sector_number * 4 + i;
-    sector_data sector_data;
+
+    bool res;
 
     status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, blocks[0], &sector_key, &(mfrc522.uid));
     if (status != MFRC522::STATUS_OK) {
@@ -162,9 +163,10 @@ sector_data read_sector(int sector_number, MFRC522::MIFARE_Key sector_key) {
         Serial.println(mfrc522.GetStatusCodeName(status));
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 16; j++) {
-                sector_data.data[i][j] = 0xFF;
+                (*sector_data).data[i][j] = 0xFF;
             }
         }
+        res = false;
     } else {
         for (int i = 0; i < 3; i++) { //Iterate through blocks in the sector
             byte buffer_block[18];
@@ -178,19 +180,21 @@ sector_data read_sector(int sector_number, MFRC522::MIFARE_Key sector_key) {
 
                 for (int i = 0; i < 3; i++) {
                     for (int j = 0; j < 16; j++) {
-                        sector_data.data[i][j] = 0xFF;
+                        (*sector_data).data[i][j] = 0xFF;
                     }
                 }
+                res = false;
             } else {
                 //Move data from buffer to sector_data for corresponding block
                 for (int j = 0; j < 16; j++) {
-                    sector_data.data[i][j] = buffer_block[j];
+                    (*sector_data).data[i][j] = buffer_block[j];
                 }
+                res = true;
             }
         }
     }
 
-    return sector_data;
+    return res;
 }
 
 typedef struct {
@@ -233,10 +237,23 @@ card_contents iterate_sectors(MFRC522::MIFARE_Key sector_key) {
 
     for (int sector = 0; sector < 16; sector++) {
         delay(100);
-        access_permit access_permit = parse_sector_data(read_sector(sector, sector_key));
+        sector_data cur_sector_data;
+        read_sector(&cur_sector_data, sector, sector_key);
+        access_permit access_permit = parse_sector_data(cur_sector_data);
         if (access_permit.book_id[0] == 0xFF && access_permit.book_id[1] == 0xFF && access_permit.book_id[2] == 0xFF) { //sector doesn't contain permit
             card_contents.contains_permit[sector] = false;
             card_contents.access_permits[sector] = access_permit;
+
+            Serial.println("Executing PICC_HaltA(), PCD_StopCrypto1, and ReadCardSerial");
+            byte buff[2];
+            byte buff_size=2;
+            mfrc522.PCD_StopCrypto1();
+            mfrc522.PICC_HaltA();
+            delay(100);
+            mfrc522.PICC_WakeupA(buff,&buff_size);
+            delay(100);
+            mfrc522.PICC_Select(&(mfrc522.uid),0);
+            delay(100);
         } else { //contains permit
             card_contents.contains_permit[sector] = true;
             card_contents.access_permits[sector] = access_permit;
