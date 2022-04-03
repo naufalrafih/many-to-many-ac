@@ -94,12 +94,12 @@ def register_asset():
         cur.execute("REPLACE INTO assets (asset_name, asset_ip_address) VALUES (?, ?)",
                     (asset_name, asset_ip_address))
 
-        cur.execute("SELECT institute_key FROM institute")
-        institute_key = cur.fetchall()[0][0]
+        institute_key = cur.execute("SELECT institute_key FROM institute").fetchall()[0][0]
+        public_key = cur.execute("SELECT public_key FROM institute").fetchall()[0][0]
         con.commit()
         con.close()
 
-        response_body = {"institute_key": institute_key}
+        response_body = {"institute_key": institute_key, "public_key": public_key}
         response_code = 200
         return response_body, response_code
     except Exception as e:
@@ -115,7 +115,7 @@ def booking_data():
         end_date = data["end_date"]
         uid = data["uid"]
 
-        #Check if booking already exists or not
+        # Check if booking already exists or not
         is_booking_new = True
         con = sqlite3.connect("db/institute-server.db")
         con.execute("PRAGMA foreign_keys = ON")
@@ -173,17 +173,17 @@ def booking_getasset():
         cur = con.cursor()
         rows = cur.execute("SELECT * FROM bookings").fetchall()
 
-        #Search assets that are booked during the time window
+        # Search assets that are booked during the time window
         booked_assets = []
         requested_start_date = datetime.strptime(start_date, "%d%m%Y")
         requested_end_date = datetime.strptime(end_date, "%d%m%Y")
-        for row in rows: #Iterate every booking
+        for row in rows:
             db_start_date = datetime.strptime(row[3], "%d%m%Y")
             db_end_date = datetime.strptime(row[4], "%d%m%Y")
             is_start_date_inbetween = db_start_date <= requested_start_date <= db_end_date
             is_end_date_inbetween = db_start_date <= requested_end_date <= db_end_date
             if (is_start_date_inbetween or is_end_date_inbetween):
-                booked_assets.append(row[2]) #Append assets that are booked during the time window to booked_assets
+                booked_assets.append(row[2]) # Append assets that are booked during the time window to booked_assets
 
         rows = cur.execute("SELECT asset_name FROM assets").fetchall()
         assets = []
@@ -201,11 +201,12 @@ def booking_getasset():
         print(f"Error! Exception {e}")
         return f"Unsuccessful", 500
 
-@app.route("/api/booking/verify", methods=["GET"])
+@app.route("/api/booking/verify", methods=["POST"])
 def booking_verify():
     try:
         data = request.get_json()["access_permits"]
         uid = request.get_json()["uid"]
+        uid_int = intarray_to_int(hex_to_intarray(uid))
         asset_ip_address = request.remote_addr
 
         con = sqlite3.connect("db/institute-server.db")
@@ -219,11 +220,15 @@ def booking_verify():
         for sector in data:
             for row in rows:
                 # Find booking data contains asset_name requested
-                if (data[sector]["access_permit"]["asset_name"] == asset_name):
+                requested_asset_name = intarray_to_str(hex_to_intarray(data[sector]["access_permit"]["asset_name"]))
+                if (requested_asset_name == asset_name):
                     # Ensure there is an existing booking data in db
-                    if (data[sector]["access_permit"]["book_id"] == row[0] and uid == row[1] and data[sector]["access_permit"]["start_date"] == row[3] and data[sector]["access_permit"]["end_date"] == row[4]):
+                    requested_book_id = intarray_to_str(hex_to_intarray(data[sector]["access_permit"]["book_id"]))
+                    requested_start_date = intarray_to_str(hex_to_intarray(data[sector]["access_permit"]["start_date"]))
+                    requested_end_date = intarray_to_str(hex_to_intarray(data[sector]["access_permit"]["end_date"]))
+                    if (requested_book_id == row[0] and uid_int == row[1] and requested_start_date == row[3] and requested_end_date == row[4]):
                         # Check if booking data is used in the right time
-                        if (datetime.strptime(data[sector]["access_permit"]["start_date"], "%d%m%Y") <= datetime.now() <= datetime.strptime(data[sector]["access_permit"]["end_date"], "%d%m%Y")):
+                        if (datetime.strptime(requested_start_date, "%d%m%Y") <= datetime.now() <= datetime.strptime(requested_end_date, "%d%m%Y")):
                             permitted = True
                             break
 
@@ -233,6 +238,27 @@ def booking_verify():
     except Exception as e:
         print(f"Error! Exception {e}")
         return f"Unsuccessful", 500
+
+def int_to_intarray(my_int, length):
+    return [int(key_byte) for key_byte in int.to_bytes(my_int,length,'big')]
+
+def intarray_to_int(intarray):
+    return int.from_bytes(b''.join([int.to_bytes(x,1,'big') for x in intarray]),'big')
+
+def intarray_to_str(intarray):
+    return b''.join([int.to_bytes(x,1,'big') for x in intarray]).decode("ascii")
+
+def hex_to_intarray(hex):
+    length = int(len(hex)/2)
+    hex_int = int.from_bytes(bytes.fromhex(hex),'big')
+    intarray = int_to_intarray(hex_int,length)
+    return intarray
+
+def remove_trailing_zero(list):
+    for i, j in enumerate(reversed(list)):
+        if j:
+            new_list = list[:-1*i]
+            return new_list
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=INSTITUTE_PORT, ssl_context=('secrets/cert.pem','secrets/key.pem'), debug=True)
