@@ -141,7 +141,6 @@ def register_user_scan():
 
                     con = sqlite3.connect("db/cert-center.db")
                     cur = con.cursor()
-                    certcenter_id = cur.execute("SELECT certcenter_id FROM certcenter").fetchall()[0][0]
                     public_key = cur.execute("SELECT public_key FROM certcenter").fetchall()[0][0]
                     certcenter_key = cur.execute("SELECT certcenter_key FROM certcenter").fetchall()[0][0]
                     con.commit()
