@@ -29,26 +29,57 @@
         //1. choose_asset() <== after submitting the form
         //2. scan_card() <== after choosing available assets
         //3. send_booking() <== after card is scanned.
+
         var bookingData = {}
         var bookingFormDiv = document.getElementById("booking-form-div")
 
-        function send_booking() {
-            bookingFormDiv.innerHTML = "Processing booking request. Please wait."
+        function choose_asset() {
+            var instituteSelect = document.getElementById("institute-name")
+            var instituteName = instituteSelect.options[instituteSelect.selectedIndex].value
 
-            var url = window.location.protocol + "//" + window.location.host + "/api/booking/data"
+            var instituteFormElement = document.getElementById("institute-form")
+            var instituteFormData = new FormData(instituteFormElement)
+            var instituteForm = {}
+            instituteFormData.forEach(function (value,key) {
+                instituteForm[key] = value
+            })
+
+            bookingData["institute_name"] = instituteName
+            bookingData["start_date"] = instituteForm["start-date"]
+            bookingData["end_date"] = instituteForm["end-date"]
+            console.log(bookingData)
+            var url = window.location.protocol + "//" + window.location.host + "/api/booking/getasset";
             var xmlHttp = new XMLHttpRequest();
             xmlHttp.open("POST", url, true);
-            xmlHttp.setRequestHeader("Content-Type","application/json");
+            xmlHttp.setRequestHeader("Content-Type","application/json")
             xmlHttp.onreadystatechange = function () {
                 if (xmlHttp.readyState == 4) {
                     if (xmlHttp.status == 200) {
-                        bookingFormDiv.innerHTML = "<h2>Booked!!!</h2>"
+                        console.log(xmlHttp.responseText);
+                        var assets_list = JSON.parse(xmlHttp.responseText)["assets"]
+
+                        bookingFormDiv.innerHTML = `
+                        <form id="asset-form" name="asset-form">
+                            <label for="asset-name">Select asset:</label>
+                            <select name="asset-name" id="asset-name"></select>
+                        </form>
+                        <button onclick="scan_card()">Book asset</button>`
+
+                        var assetSelectElement = document.getElementById("asset-name")
+                        assets_list.forEach(function(asset, index) {
+                            var optionElement = document.createElement("option")
+                            optionElement.required = true
+                            optionElement.setAttribute("value",asset)
+                            optionElement.innerHTML = asset
+                            assetSelectElement.appendChild(optionElement)
+                        })
                     } else {
-                        bookingFormDiv.innerHTML = "Booking failed. Please reload page."
+                        alert("Failed to initialize")
+                        bookingFormDiv.innerHTML = "Booking failed. Please reload the page."
                     }
                 }
             }
-            xmlHttp.send(JSON.stringify(bookingData))
+            xmlHttp.send(JSON.stringify(bookingData));
         }
 
         function scan_card() {
@@ -93,54 +124,25 @@
             }, 1000)
         }
 
-        function choose_asset() {
-            var instituteSelect = document.getElementById("institute-name")
-            var instituteName = instituteSelect.options[instituteSelect.selectedIndex].value
+        function send_booking() {
+            bookingFormDiv.innerHTML = "Processing booking request. Please wait."
 
-            var instituteFormElement = document.getElementById("institute-form")
-            var instituteFormData = new FormData(instituteFormElement)
-            var instituteForm = {}
-            instituteFormData.forEach(function (value,key) {
-                instituteForm[key] = value
-            })
-
-            bookingData["institute_name"] = instituteName
-            bookingData["start_date"] = instituteForm["start-date"]
-            bookingData["end_date"] = instituteForm["end-date"]
-            console.log(bookingData)
-            var url = window.location.protocol + "//" + window.location.host + "/api/booking/getasset";
+            var url = window.location.protocol + "//" + window.location.host + "/api/booking/data"
             var xmlHttp = new XMLHttpRequest();
             xmlHttp.open("POST", url, true);
-            xmlHttp.setRequestHeader("Content-Type","application/json")
+            xmlHttp.setRequestHeader("Content-Type","application/json");
             xmlHttp.onreadystatechange = function () {
                 if (xmlHttp.readyState == 4) {
                     if (xmlHttp.status == 200) {
-                        console.log(xmlHttp.responseText);
-                        var assets_list = JSON.parse(xmlHttp.responseText)["assets"]
-
-                        bookingFormDiv.innerHTML = `
-                        <form id="asset-form" name="asset-form">
-                            <label for="asset-name">Select asset:</label>
-                            <select name="asset-name" id="asset-name"></select>
-                        </form>
-                        <button onclick="scan_card()">Book asset</button>`
-
-                        var assetSelectElement = document.getElementById("asset-name")
-                        assets_list.forEach(function(asset, index) {
-                            var optionElement = document.createElement("option")
-                            optionElement.required = true
-                            optionElement.setAttribute("value",asset)
-                            optionElement.innerHTML = asset
-                            assetSelectElement.appendChild(optionElement)
-                        })                        
+                        bookingFormDiv.innerHTML = "<h2>Booked!!!</h2>"
                     } else {
-                        alert("Failed to initialize")
-                        bookingFormDiv.innerHTML = "Booking failed. Please reload the page."
+                        bookingFormDiv.innerHTML = "Booking failed. Please reload page."
                     }
                 }
             }
-            xmlHttp.send(JSON.stringify(bookingData));
+            xmlHttp.send(JSON.stringify(bookingData))
         }
+
     </script>
 </body>
 </html>
