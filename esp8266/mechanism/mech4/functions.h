@@ -1,22 +1,22 @@
 void setNTP() {
     // Set time via NTP, as required for x.509 validation
     configTime(3 * 3600, 0, "time.nist.gov", "pool.ntp.org");
-    Serial.print("Waiting for NTP time sync: ");
+    Serial.print(F("Waiting for NTP time sync: "));
     time_t now = time(nullptr);
 
     while (now < 8 * 3600 * 2) {
         delay(100);
-        Serial.print(".");
+        Serial.print(F("."));
         now = time(nullptr);
     }
 
-    Serial.println("");
+    Serial.println(F(""));
 
     struct tm timeinfo;
 
     gmtime_r(&now, &timeinfo);
 
-    Serial.print("Current time: ");
+    Serial.print(F("Current time: "));
     Serial.print(asctime(&timeinfo));
 }
 
@@ -24,54 +24,71 @@ int request(const char *method, const char *path, JsonDocument& doc_request, Jso
     // 200: Successful
     // -1: Connection failed
     // -2: Deserialize failed
-    BearSSL::WiFiClientSecure wifiClient;
-    wifiClient.setFingerprint(fp);
+    Serial.println("FreeHeap:");
+    Serial.println(ESP.getFreeHeap());
+    if (WiFi.status() == WL_CONNECTED) {
+        std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
+        client->setFingerprint(fp);
 
-    setNTP();
+        HTTPClient https;
+        setNTP();
 
-    bool is_https = true;
-    HTTPClient https;
+        bool is_https = true;
 
-    if (https.begin(wifiClient, hostserver, hostport, path, is_https)) {
-        Serial.printf("[HTTPS] %s...\n", (String) method);
-        // start connection and send HTTP header
+        if (https.begin(*client, "https://" + String(hostserver) + ":" + String(hostport) + String(path))) {
+            https.useHTTP10();
+            https.addHeader("Content-Type", "application/json");
+            Serial.printf("[HTTPS] %s...\n", (String) method);
+            // start connection and send HTTP header
 
-        String request_body;
-        serializeJson(doc_request, request_body);
-        Serial.println("Attempting HTTPS request. Request body:");
-        Serial.println(request_body);
-        https.addHeader("Content-Type", "application/json");
-        int httpCode;
-        yield();
-        if (method == "GET") {
-            delay(100);
-            httpCode = https.GET();
-        } else if (method == "POST") {
-            delay(100);
-            httpCode = https.POST(request_body);
-        }
+            String request_body = "";
+            serializeJson(doc_request, request_body);
+            Serial.println(F("Attempting HTTPS request. Request body:"));
+            Serial.println(request_body);
+            int httpCode;
 
-        // httpCode will be negative on error
-        if (httpCode > 0) {
-            // HTTP header has been send and Server response header has been handled
-            Serial.printf("[HTTPS] %s... code: %d\n", (String) method, httpCode);
-
-            // file found at server
-            if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-                String payload = https.getString();
-                Serial.println(payload);
-                DeserializationError error = deserializeJson(doc_response, payload);
-                if (error) {
-                    Serial.print(F("deserializeJson() failed: "));
-                    Serial.println(error.f_str());
-                    return -2;
+            yield();
+            if (method == "GET") {
+                delay(100);
+                httpCode = https.GET();
+            } else if (method == "POST") {
+                delay(100);
+//                httpCode = https.POST(request_body);
+                if (path == "/api/booking/verify") {
+                    httpCode = https.POST("{\"uid\":\"d921f997\",\"access_permits\":[]}");
+                } else {
+                    httpCode = https.POST(request_body);
                 }
-                return 200;
             }
+
+            // httpCode will be negative on error
+            if (httpCode > 0) {
+                // HTTP header has been send and Server response header has been handled
+                Serial.printf("[HTTPS] %s... code: %d\n", (String) method, httpCode);
+
+                // file found at server
+                if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+                    String payload = https.getString();
+                    Serial.println(payload);
+                    DeserializationError error = deserializeJson(doc_response, payload);
+                    if (error) {
+                        Serial.print(F("deserializeJson() failed: "));
+                        Serial.println(error.f_str());
+                        return -2;
+                    }
+                    return 200;
+                }
+            } else {
+                Serial.printf("[HTTPS] %s... failed, error: %s\n", (String) method, https.errorToString(httpCode).c_str());
+                return httpCode;
+            }
+            https.end();
         } else {
-            Serial.printf("[HTTPS] %s... failed, error: %s\n", (String) method, https.errorToString(httpCode).c_str());
-            return httpCode;
+            Serial.printf("[HTTPS] Unable to connect\n");
         }
+
+    } else {
+        Serial.println(F("WiFi not connected"));
     }
 }
 
@@ -87,9 +104,9 @@ void register_asset(unsigned long long * institute_key, unsigned long long * pub
     //Request
     int response_code = request("POST", "/api/register/asset", doc_request, doc_response);
     if (response_code == 200) {
-        Serial.println("Success registering and getting institute_key.");
+        Serial.println(F("Success registering and getting institute_key."));
     } else {
-        Serial.println("Unsuccessful registering.");
+        Serial.println(F("Unsuccessful registering."));
         *institute_key = -999;
         return;
     }
@@ -122,7 +139,7 @@ void ull2mpz(mpz_t z, unsigned long long ull) {
 }
 
 MFRC522::MIFARE_Key calculate_key(unsigned long long institute_key, unsigned long long uid, unsigned long long public_key) {
-    Serial.println("calculate_key() called");
+    Serial.println(F("calculate_key() called"));
     mpz_t i, p, u, r;
     mpz_init(i);
     mpz_init(p);
@@ -150,7 +167,7 @@ typedef struct {
 
 
 bool read_sector(sector_data * sector_data, int sector_number, MFRC522::MIFARE_Key sector_key) {
-    Serial.println("read_sector() called");
+    Serial.println(F("read_sector() called"));
     MFRC522::StatusCode status;
     byte blocks[3];
     for (int i = 0; i < 3; i++) blocks[i] = sector_number * 4 + i;
@@ -232,7 +249,7 @@ typedef struct {
 } card_contents; //Will be populated when iterating through all sectors.
 
 card_contents iterate_sectors(MFRC522::MIFARE_Key sector_key) {
-    Serial.println("iterate_sectors() called");
+    Serial.println(F("iterate_sectors() called"));
     card_contents card_contents;
 
     for (int sector = 0; sector < 16; sector++) {
@@ -244,15 +261,15 @@ card_contents iterate_sectors(MFRC522::MIFARE_Key sector_key) {
             card_contents.contains_permit[sector] = false;
             card_contents.access_permits[sector] = access_permit;
 
-            Serial.println("Executing PICC_HaltA(), PCD_StopCrypto1, and ReadCardSerial");
+            Serial.println(F("Executing PICC_HaltA(), PCD_StopCrypto1, and ReadCardSerial"));
             byte buff[2];
-            byte buff_size=2;
+            byte buff_size = 2;
             mfrc522.PCD_StopCrypto1();
             mfrc522.PICC_HaltA();
             delay(100);
-            mfrc522.PICC_WakeupA(buff,&buff_size);
+            mfrc522.PICC_WakeupA(buff, &buff_size);
             delay(100);
-            mfrc522.PICC_Select(&(mfrc522.uid),0);
+            mfrc522.PICC_Select(&(mfrc522.uid), 0);
             delay(100);
         } else { //contains permit
             card_contents.contains_permit[sector] = true;
@@ -264,7 +281,7 @@ card_contents iterate_sectors(MFRC522::MIFARE_Key sector_key) {
 }
 
 DynamicJsonDocument verify_request_body(card_contents card_contents) {
-    Serial.println("verify_request_body() called");
+    Serial.println(F("verify_request_body() called"));
     delay(100);
     DynamicJsonDocument res(3072);
     byte uid[4];
@@ -288,7 +305,7 @@ DynamicJsonDocument verify_request_body(card_contents card_contents) {
     }
     String request_body;
     serializeJson(res, request_body);
-    Serial.println("Serialize request body result:");
+    Serial.println(F("Serialize request body result:"));
     Serial.println(request_body);
     return res;
 }
@@ -301,9 +318,9 @@ bool determine_action(DynamicJsonDocument jsonBody) {
     //Request
     int response_code = request("POST", "/api/booking/verify", jsonBody, doc_response);
     if (response_code == 200) {
-        Serial.println("Success contacting server to determine action.");
+        Serial.println(F("Success contacting server to determine action."));
     } else {
-        Serial.println("Unsuccessful contacting server to determine action.");
+        Serial.println(F("Unsuccessful contacting server to determine action."));
         return false;
     }
 
@@ -314,16 +331,16 @@ bool determine_action(DynamicJsonDocument jsonBody) {
 
 void actuate_access(bool isPermitted) {
     if (isPermitted) {
-        Serial.println("Permitted.");
+        Serial.println(F("Permitted."));
         if (thingState == 0) {
-            Serial.println("Changing state to HIGH");
+            Serial.println(F("Changing state to HIGH"));
             thingState = 1;
         } else {
-            Serial.println("Changing state to LOW");
+            Serial.println(F("Changing state to LOW"));
             thingState = 0;
         }
         digitalWrite(thingPin, thingState);
     } else {
-        Serial.println("Not permitted!");
+        Serial.println(F("Not permitted!"));
     }
 }

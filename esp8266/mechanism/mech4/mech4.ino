@@ -4,9 +4,11 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
+#include <WiFiClientSecureBearSSL.h>
 #include <SPI.h>
 #include <MFRC522.h>
 #include <gmp-ino.h>
+
 
 //Wiring: https://www.instructables.com/MFRC522-RFID-Reader-Interfaced-With-NodeMCU/
 #define RST_PIN         5           // Configurable, see typical pin layout above
@@ -14,9 +16,9 @@
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance
 
-const char* ssid     = "mywifi";
-const char* password = "543216789";
-const char* hostserver = "192.168.137.1";
+const char* ssid     = "Gerlong12GH";
+const char* password = "patungan400";
+const char* hostserver = "192.168.100.43";
 //IPAddress hostserver(192, 168, 137, 1);
 uint16_t hostport = 35754;
 
@@ -35,39 +37,42 @@ void setup() {
     pinMode(thingPin, OUTPUT);
     digitalWrite(thingPin, thingState);
     Serial.begin(115200);
-    SPI.begin();
-    mfrc522.PCD_Init();
     delay(10);
 
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid, password);
-    Serial.print("Connecting to ");
-    Serial.print(ssid); Serial.println(" ...");
+    Serial.print(F("Connecting to "));
+    Serial.print(ssid); Serial.println(F(" ..."));
 
     int i = 0;
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
-        Serial.print(++i); Serial.print(' ');
+        Serial.print(++i); Serial.print(F(" "));
     }
 
-    Serial.println('\n');
-    Serial.println("Connection established!");
-    Serial.print("IP address:\t");
+    Serial.println(F("\n"));
+    Serial.println(F("Connection established!"));
+    Serial.print(F("IP address:\t"));
     Serial.println(WiFi.localIP());         // Send the IP address of the ESP8266 to the computer
+
+    delay(50);
 
     register_asset(&institute_key, &public_key, asset_name);
     while (institute_key == -999) {
         delay(500);
-        Serial.println("Try registering and getting institute_key again...");
+        Serial.println(F("Try registering and getting institute_key again..."));
         register_asset(&institute_key, &public_key, asset_name);
     }
+
+    SPI.begin();
+    mfrc522.PCD_Init();
 }
 
 void loop() {
 
     MFRC522::MIFARE_Key sector_key;
 
-    Serial.println("Starting loop");
+    Serial.println(F("Starting loop"));
     Serial.printf("institute_key: %llu\n", institute_key);
     //Detect card. If no card is detected, reset loop.
     if ( ! mfrc522.PICC_IsNewCardPresent()) {
@@ -90,8 +95,9 @@ void loop() {
 
     card_contents card_contents = iterate_sectors(sector_key);
     DynamicJsonDocument jsonBody = verify_request_body(card_contents);
+    SPI.end();
+    delay(1000);
     actuate_access(determine_action(jsonBody));
-    
-    mfrc522.PCD_StopCrypto1();
+    SPI.begin();
     return;
 }
