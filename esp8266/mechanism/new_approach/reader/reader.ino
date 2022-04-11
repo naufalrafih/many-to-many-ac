@@ -18,6 +18,7 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance
 SoftwareSerial linkSerial(0, 2);
 
 void setup() {
+    pinMode(BUILTIN_LED,OUTPUT);
     Serial.begin(115200);
     linkSerial.begin(9600);
     delay(10);
@@ -82,7 +83,9 @@ void loop() {
         Serial.printf("sector_key[%d] = %d\n", i, sector_key.keyByte[i]);
     }
 
+    digitalWrite(BUILTIN_LED, HIGH);
     card_contents card_contents = iterate_sectors(sector_key, mfrc522);
+    digitalWrite(BUILTIN_LED, LOW);
     String request_body = verify_request_body(card_contents, mfrc522);
 
     Serial.println("Request body:");

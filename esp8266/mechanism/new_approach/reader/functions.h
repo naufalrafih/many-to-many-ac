@@ -131,7 +131,6 @@ card_contents iterate_sectors(MFRC522::MIFARE_Key sector_key, MFRC522 &mfrc522) 
     card_contents card_contents;
 
     for (int sector = 0; sector < 16; sector++) {
-        delay(100);
         sector_data cur_sector_data;
         read_sector(&cur_sector_data, sector, sector_key, mfrc522);
         access_permit access_permit = parse_sector_data(cur_sector_data);
@@ -160,7 +159,6 @@ card_contents iterate_sectors(MFRC522::MIFARE_Key sector_key, MFRC522 &mfrc522) 
 
 String verify_request_body(card_contents card_contents, MFRC522 &mfrc522) {
     Serial.println(F("verify_request_body() called"));
-    delay(100);
     DynamicJsonDocument res(3072);
     byte uid[4];
     for (int i = 0; i < 4; i++) {
@@ -169,7 +167,6 @@ String verify_request_body(card_contents card_contents, MFRC522 &mfrc522) {
     res["uid"] = bytearray_to_hex(uid, 4);
     JsonArray access_permits_arr = res.createNestedArray("access_permits");
     for (int i = 0; i < 16; i++) {
-        delay(100);
         if (card_contents.contains_permit[i]) {
             Serial.printf("Sector %d contains permit\n", i);
             JsonObject access_permit_obj = access_permits_arr.createNestedObject();
