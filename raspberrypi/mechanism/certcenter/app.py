@@ -412,7 +412,7 @@ def api_booking_data():
         return f"Unsuccessful", 500
 
 @app.route("/api/booking/check", methods=["GET"])
-def booking_check():
+def api_booking_check():
     try:
         data = []
         rdr = RFID_timeout()
