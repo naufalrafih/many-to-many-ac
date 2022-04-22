@@ -4,9 +4,9 @@
 #include <WiFiClient.h>
 #include <SoftwareSerial.h>
 
-#define ssid     "Gerlong12GH"
-#define password "patungan400"
-#define hostserver "192.168.100.43"
+#define ssid     "mywifi"
+#define password "543216789"
+#define hostserver "192.168.137.116"
 //IPAddress hostserver(192, 168, 137, 1);
 #define hostport 35754
 
@@ -17,7 +17,7 @@ HTTPClient https;
 int thingPin = 16; //D0
 int thingState = 0;
 
-static const char fp[] PROGMEM = "ED:3F:4A:CC:DB:DB:57:A5:C8:39:AE:65:D7:59:33:94:0E:1D:56:E0";
+static const char fp[] PROGMEM = "4A:96:A4:A0:10:61:56:49:6B:51:C8:99:DF:31:C8:B9:4D:54:CB:C6";
 #include "functions.h"
 
 unsigned long long institute_key;
@@ -28,7 +28,7 @@ void setup() {
     pinMode(thingPin, OUTPUT);
     digitalWrite(thingPin, thingState);
     Serial.begin(115200);
-    linkSerial.begin(9600);
+    linkSerial.begin(4800);
     delay(10);
 
     WiFi.mode(WIFI_STA);
