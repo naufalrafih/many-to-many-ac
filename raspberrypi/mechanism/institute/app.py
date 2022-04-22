@@ -211,7 +211,7 @@ def booking_verify():
 
         con = sqlite3.connect("db/institute-server.db")
         cur = con.cursor()
-        asset_name = cur.execute("SELECT asset_name FROM assets WHERE asset_ip_address = ?", (asset_ip_address,)).fetchall()[0]
+        asset_name = cur.execute("SELECT asset_name FROM assets WHERE asset_ip_address = ?", (asset_ip_address,)).fetchall()[0][0]
         rows = cur.execute("SELECT * FROM bookings WHERE asset_name = ?", (asset_name,)).fetchall()
         con.commit()
         con.close()
