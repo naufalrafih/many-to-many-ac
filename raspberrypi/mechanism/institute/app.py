@@ -217,10 +217,14 @@ def booking_verify():
         con.close()
 
         permitted = False
+        print(f"Asset called to verify: {asset_name}")
         for sector in data:
+            print("Verifying access permit stored in sector"+sector["sector"])
+            print("Iterating through bookings for asset name: " + asset_name)
             for row in rows:
                 # Find booking data contains asset_name requested
                 requested_asset_name = intarray_to_str(hex_to_intarray(data[sector]["access_permit"]["asset_name"]))
+                print(f"Requested asset_name: {requested_asset_name}")
                 if (requested_asset_name == asset_name):
                     # Ensure there is an existing booking data in db
                     requested_book_id = intarray_to_str(hex_to_intarray(data[sector]["access_permit"]["book_id"]))
@@ -231,6 +235,12 @@ def booking_verify():
                         if (datetime.strptime(requested_start_date, "%d%m%Y") <= datetime.now() <= datetime.strptime(requested_end_date, "%d%m%Y")):
                             permitted = True
                             break
+                        else:
+                            print(f"Sector {sector['sector']}: Booking data matches but current date does not match")
+                    else:
+                        print(f"Sector {sector['sector']}: Booking data does not match")
+                else:
+                    print(f"Sector {sector['sector']}: Asset name does not match")
 
         response_body = {"permitted": permitted}
         response_code = 200
