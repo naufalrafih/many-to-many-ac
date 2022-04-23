@@ -20,7 +20,7 @@ SoftwareSerial linkSerial(0, 2);
 void setup() {
     pinMode(BUILTIN_LED,OUTPUT);
     Serial.begin(115200);
-    linkSerial.begin(9600);
+    linkSerial.begin(4800);
     delay(10);
     while (institute_key == 0 | public_key == 0) {
         Serial.println("Getting sector_key...");
