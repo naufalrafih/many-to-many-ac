@@ -294,8 +294,6 @@ def api_booking_data():
         con = sqlite3.connect("db/cert-center.db")
         cur = con.cursor()
         institute_ip_address = cur.execute("SELECT institute_ip_address FROM institutes WHERE institute_name = ?",(institute_name,)).fetchall()[0][0]
-        con.commit()
-        con.close()
 
         request_body = {
             "asset_name": asset_name,
@@ -360,8 +358,6 @@ def api_booking_data():
                                     data_block_2 = hex_to_intarray(book_id)
 
                                     institute_key = cur.execute("SELECT institute_key FROM institutes WHERE institute_name = ?",(institute_name,)).fetchall()[0][0]
-                                    con.commit()
-                                    con.close()
                                     keyija, keyija_error = generate_keyij(institute_key, uid_int, public_key)
                                     if not keyija_error:
                                         data_block_3 = int_to_intarray(keyija, 6)
@@ -405,7 +401,8 @@ def api_booking_data():
             response_body = "Card not scanned"
             response_code = 504
         GPIO.cleanup()
-
+        con.commit()
+        con.close()
         return response_body, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
