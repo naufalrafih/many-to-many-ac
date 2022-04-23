@@ -324,8 +324,6 @@ def api_booking_data():
                 cur = con.cursor()
                 public_key = cur.execute("SELECT public_key FROM certcenter").fetchall()[0][0]
                 certcenter_key = cur.execute("SELECT certcenter_key FROM certcenter").fetchall()[0][0]
-                con.commit()
-                con.close()
 
                 keyij, keyij_error = generate_keyij(certcenter_key, uid_int, public_key)
                 if not keyij_error:
@@ -429,8 +427,6 @@ def api_booking_check():
                 public_key = cur.execute("SELECT public_key FROM certcenter").fetchall()[0][0]
                 certcenter_key = cur.execute("SELECT certcenter_key FROM certcenter").fetchall()[0][0]
                 uid_int = intarray_to_int(uid[:-1])
-                con.commit()
-                con.close()
 
                 keyij, keyij_error = generate_keyij(certcenter_key, uid_int, public_key)
                 if not keyij_error:
@@ -491,6 +487,8 @@ def api_booking_check():
             response_code = 504
         GPIO.cleanup()
 
+        con.commit()
+        con.close()
         return response_body, response_code
     except Exception as e:
         print(f"Error! Exception: {e}")
