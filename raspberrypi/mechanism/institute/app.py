@@ -1,3 +1,4 @@
+from os import remove
 from flask import Flask, render_template, request #type: ignore
 import requests
 import sqlite3
@@ -219,17 +220,17 @@ def booking_verify():
         permitted = False
         print(f"Asset called to verify: {asset_name}")
         for sector in data:
-            print("Verifying access permit stored in sector"+sector["sector"])
+            print("Verifying access permit stored in sector"+str(sector["sector"]))
             print("Iterating through bookings for asset name: " + asset_name)
             for row in rows:
                 # Find booking data contains asset_name requested
-                requested_asset_name = intarray_to_str(hex_to_intarray(data[sector]["access_permit"]["asset_name"]))
+                requested_asset_name = intarray_to_str(remove_trailing_zero(hex_to_intarray(sector["access_permit"]["asset_name"])))
                 print(f"Requested asset_name: {requested_asset_name}")
                 if (requested_asset_name == asset_name):
                     # Ensure there is an existing booking data in db
-                    requested_book_id = intarray_to_str(hex_to_intarray(data[sector]["access_permit"]["book_id"]))
-                    requested_start_date = intarray_to_str(hex_to_intarray(data[sector]["access_permit"]["start_date"]))
-                    requested_end_date = intarray_to_str(hex_to_intarray(data[sector]["access_permit"]["end_date"]))
+                    requested_book_id = intarray_to_str(hex_to_intarray(sector["access_permit"]["book_id"]))
+                    requested_start_date = intarray_to_str(hex_to_intarray(sector["access_permit"]["start_date"]))
+                    requested_end_date = intarray_to_str(hex_to_intarray(sector["access_permit"]["end_date"]))
                     if (requested_book_id == row[0] and uid_int == row[1] and requested_start_date == row[3] and requested_end_date == row[4]):
                         # Check if booking data is used in the right time
                         if (datetime.strptime(requested_start_date, "%d%m%Y") <= datetime.now() <= datetime.strptime(requested_end_date, "%d%m%Y")):
