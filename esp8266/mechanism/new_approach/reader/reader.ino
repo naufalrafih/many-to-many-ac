@@ -90,5 +90,6 @@ void loop() {
 
     Serial.println("Request body:");
     Serial.println(request_body);
+    linkSerial.println("TEST");
     linkSerial.println(request_body);
 }

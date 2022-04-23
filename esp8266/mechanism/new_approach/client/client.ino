@@ -22,7 +22,7 @@ static const char fp[] PROGMEM = "4A:96:A4:A0:10:61:56:49:6B:51:C8:99:DF:31:C8:B
 
 unsigned long long institute_key;
 unsigned long long public_key;
-#define asset_name "rock"
+#define asset_name "cupboard"
 
 void setup() {
     pinMode(thingPin, OUTPUT);

@@ -1,6 +1,9 @@
 String bytearray_to_hex(byte bytearray[], int len) {
     String hex = "";
     for (int i = 0; i < len; i++) {
+        if (bytearray[i] < 16) {
+          hex += "0";
+        }
         hex += String(bytearray[i], HEX);
     }
     return hex;
