@@ -228,7 +228,7 @@ def booking_verify():
                 print(f"Requested asset_name: {requested_asset_name}")
                 if (requested_asset_name == asset_name):
                     # Ensure there is an existing booking data in db
-                    requested_book_id = intarray_to_str(hex_to_intarray(sector["access_permit"]["book_id"]))
+                    requested_book_id = sector["access_permit"]["book_id"]
                     requested_start_date = intarray_to_str(hex_to_intarray(sector["access_permit"]["start_date"]))
                     requested_end_date = intarray_to_str(hex_to_intarray(sector["access_permit"]["end_date"]))
                     if (requested_book_id == row[0] and uid_int == row[1] and requested_start_date == row[3] and requested_end_date == row[4]):
