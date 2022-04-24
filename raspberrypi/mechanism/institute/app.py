@@ -1,4 +1,3 @@
-from os import remove
 from flask import Flask, render_template, request #type: ignore
 import requests
 import sqlite3
