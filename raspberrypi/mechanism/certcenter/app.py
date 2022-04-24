@@ -362,7 +362,7 @@ def api_booking_data():
                                         error_date = rdr.write((block-2), data_block_0)
                                         error_assetname = rdr.write((block-1), data_block_1)
                                         error_bookid = rdr.write(block, data_block_2)
-                                        error_trailer = util.write_trailer((block-2)/4, (keyija_array[0], keyija_array[1], keyija_array[2], keyija_array[3], keyija_array[4], keyija_array[5]),
+                                        error_trailer = util.write_trailer(int((block-2)/4), (keyija_array[0], keyija_array[1], keyija_array[2], keyija_array[3], keyija_array[4], keyija_array[5]),
                                                             (0x7F, 0x07, 0x88), 0x00, (keyij_array[0], keyij_array[1], keyij_array[2], keyij_array[3], keyij_array[4], keyij_array[5]))
 
                                         if error_date or error_assetname or error_bookid or error_trailer:
