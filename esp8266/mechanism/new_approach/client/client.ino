@@ -6,7 +6,7 @@
 
 #define ssid     "mywifi"
 #define password "543216789"
-#define hostserver "192.168.137.116"
+#define hostserver "192.168.137.23"
 //IPAddress hostserver(192, 168, 137, 1);
 #define hostport 35754
 
@@ -17,12 +17,12 @@ HTTPClient https;
 int thingPin = 16; //D0
 int thingState = 0;
 
-static const char fp[] PROGMEM = "4A:96:A4:A0:10:61:56:49:6B:51:C8:99:DF:31:C8:B9:4D:54:CB:C6";
+static const char fp[] PROGMEM = "FE:1C:C4:34:7A:F4:A3:C7:26:9F:8A:AA:F0:1E:AD:25:4C:F1:5E:64";
 #include "functions.h"
 
 unsigned long long institute_key;
 unsigned long long public_key;
-#define asset_name "cupboard"
+#define asset_name "lamp"
 
 void setup() {
     pinMode(thingPin, OUTPUT);

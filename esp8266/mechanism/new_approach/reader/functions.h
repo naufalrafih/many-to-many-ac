@@ -129,7 +129,7 @@ typedef struct {
     access_permit access_permits[16]; //contains the permits.
 } card_contents; //Will be populated when iterating through all sectors.
 
-card_contents iterate_sectors(MFRC522::MIFARE_Key sector_key, MFRC522 &mfrc522) {
+card_contents c(MFRC522::MIFARE_Key sector_key, MFRC522 &mfrc522) {
     Serial.println(F("iterate_sectors() called"));
     card_contents card_contents;
 

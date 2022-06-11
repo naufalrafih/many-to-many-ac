@@ -7,6 +7,7 @@
 
 #define RST_PIN         5           // Configurable, see typical pin layout above
 #define SS_PIN          4          // Configurable, see typical pin layout above
+#define ACK_PIN         16          // Wire to the asset pin of the client MCU
 
 #include "functions.h"
 
@@ -16,6 +17,8 @@ unsigned long long public_key = 0;
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance
 SoftwareSerial linkSerial(0, 2);
+int asset_cond;
+unsigned long long read_time;
 
 void setup() {
     pinMode(BUILTIN_LED,OUTPUT);
@@ -57,15 +60,26 @@ void setup() {
     SPI.begin();
     mfrc522.PCD_Init();
 
-
+    pinMode(ACK_PIN, INPUT);
+    asset_cond = digitalRead(ACK_PIN);
 }
 
 void loop() {
+    if (digitalRead(ACK_PIN) != asset_cond) { //Asset condition has changed
+        unsigned long long actuate_time = micros();
+        unsigned long long latency = actuate_time - read_time;
+        asset_cond = digitalRead(ACK_PIN);
+        Serial.print("TIME WHEN CARD IS READ:"); Serial.println(read_time);
+        Serial.print("TIME WHEN ASSET IS ACTUATED:"); Serial.println(actuate_time);        
+        Serial.print("LATENCY IN MICROS:"); Serial.println(latency);
+    }
 
     //Detect card. If no card is detected, reset loop.
     if ( ! mfrc522.PICC_IsNewCardPresent()) {
         return;
     }
+
+    read_time = micros();
 
     // Select one of the cards
     if ( ! mfrc522.PICC_ReadCardSerial()) {
